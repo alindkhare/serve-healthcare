@@ -21,7 +21,7 @@ func main() {
 		// wait for 8 milliseconds to simulate the patient
 		// incoming data
 		time.Sleep(8 * time.Millisecond)
-		go MakeRequest("http://127.0.0.1:8000/hospital?patient_name=Adam?value=0.0?vtype=ECG", ch)
+		go MakeRequest("http://127.0.0.1:8000/hospital?patient_name=Adam&value=0.0&vtype=ECG", ch)
 	}
 	for i := 0; i <= 3800; i++ {
 		fmt.Println(<-ch)
