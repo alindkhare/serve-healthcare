@@ -5,6 +5,8 @@ from patient_prediction import PytorchPredictorECG
 from ray.experimental.serve import BackendConfig
 import subprocess
 from pathlib import Path
+import os
+
 # ECG
 n_channel = 1
 base_filters = 64
