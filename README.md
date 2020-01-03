@@ -5,5 +5,8 @@
 1. `cd serve-healthcare`
 2. `bash ./ray/ci/travis/install-bazel.sh` 
 3. `cd ./ray/python && pip install -e .[serve]  --verbose`
+4. `cd ../../`
+### Installing Requirements for resnet1d
+1. `pip install -r requirement-resnet1d.txt`
 
 
