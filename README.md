@@ -4,6 +4,8 @@
 2. `conda activate serve-health`
 3. `conda install -c pytorch pytorch`
 4. `conda install -c pytorch torchvision`
+### Install Golang
+Installation details can be found [here](https://golang.org/doc/install). 
 ### Cloning the repository
 `git clone --recurse-submodules https://github.com/alindkhare/serve-healthcare.git`
 ### Installing Ray
