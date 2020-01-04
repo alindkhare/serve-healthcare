@@ -43,7 +43,8 @@ class StorePatientData:
                     ObjectID = self.service_handles_dict[value_type].remote(
                         data=data
                     )
-                    result = ray.get(ObjectID)
+                    # result = ray.get(ObjectID)
+                    result = ObjectID
                     patient_val_list.clear()
                 else:
                     result = "Data recorded"
