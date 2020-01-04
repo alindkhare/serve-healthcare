@@ -11,6 +11,5 @@
 ### Running the profiling code
 Running `python profile.py` populates `.jsonl` file for time taken by each query.
 Using `.jsonl` file following can be plotted - 
-1. [Latency CDF](profiled_examples/latency_cdf.png)
-2. [Query Timeline](profiled_examples/latency_timeline.png)
-
+![Latency CDF](profiled_examples/latency_cdf.png)
+![Query Timeline](profiled_examples/latency_timeline.png)
