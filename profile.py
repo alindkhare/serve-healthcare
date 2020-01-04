@@ -36,11 +36,11 @@ p.touch()
 os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
 serve.init(blocking=True)
 
-lambda kwargs_creator: {'info': {"patient_name": "Adam",
-                                 "value": 0.0,
-                                 "vtype": "ECG"
-                                 }
-                        }
+kwargs_creator = lambda : {'info': {"patient_name": "Adam",
+                                    "value": 0.0,
+                                    "vtype": "ECG"
+                                    }
+                          }
 
 # create ECG service
 serve.create_endpoint("ECG")
