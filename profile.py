@@ -36,6 +36,7 @@ p.touch()
 os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
 serve.init(blocking=True)
 
+# Kwargs creator for profiling the service
 kwargs_creator = lambda : {'info': {"patient_name": "Adam",
                                     "value": 0.0,
                                     "vtype": "ECG"
@@ -44,11 +45,11 @@ kwargs_creator = lambda : {'info': {"patient_name": "Adam",
 
 # create ECG service
 serve.create_endpoint("ECG")
-# create data point service
+# create data point service for hospital
 serve.create_endpoint("hospital", route="/hospital",
                       kwargs_creator=kwargs_creator)
 
-# create backend
+# create backend for ECG
 b_config = BackendConfig(num_replicas=1)
 serve.create_backend(PytorchPredictorECG, "PredictECG",
                      model, cuda, backend_config=b_config)
@@ -56,11 +57,13 @@ serve.create_backend(PytorchPredictorECG, "PredictECG",
 serve.link("ECG", "PredictECG")
 handle = serve.get_handle("ECG")
 
-# preparinf args for StorePatientData backend.
+# prepare args for StorePatientData backend.
 service_handles_dict = {"ECG": handle}
+# do prediction after every 3750 queries.
 num_queries_dict = {"ECG": 3750}
 # Always keep num_replicas as 1 as this is a stateful Backend
-# This backend will store all the patient's data data
+# This backend will store all the patient's data and transfer
+# the prediction to respective Backend (ECG handle in this case)
 b_config_hospital = BackendConfig(num_replicas=1)
 serve.create_backend(StorePatientData, "StoreData",
                      service_handles_dict, num_queries_dict,
@@ -74,4 +77,3 @@ for _ in range(1):
     procs.append(ls_output)
 for p in procs:
     p.wait()
-# print(serve.stat())

@@ -21,7 +21,9 @@ func main() {
 		// wait for 8 milliseconds to simulate the patient
 		// incoming data
 		time.Sleep(8 * time.Millisecond)
+		// This how actual client will send the result
 		// go MakeRequest("http://127.0.0.1:8000/hospital?patient_name=Adam&value=0.0&vtype=ECG", ch)
+		// This is how profiling result is send
 		go MakeRequest("http://127.0.0.1:8000/RayServeProfile/hospital", ch)
 	}
 	for i := 0; i <= 3800; i++ {
