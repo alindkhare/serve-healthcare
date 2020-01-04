@@ -44,7 +44,7 @@ class StorePatientData:
                         data=data
                     )
                     # result = ray.get(ObjectID)
-                    result = ObjectID
+                    result = ObjectID.binary()
                     patient_val_list.clear()
                 else:
                     result = "Data recorded"
