@@ -1,4 +1,9 @@
 # serve-healthcare
+### Create Conda Enviornment
+1. `conda create -n serve-health python=3.6`
+2. `conda activate serve-health`
+3. `conda install -c pytorch pytorch`
+4. `conda install -c pytorch torchvision`
 ### Cloning the repository
 `git clone --recurse-submodules https://github.com/alindkhare/serve-healthcare.git`
 ### Installing Ray
