@@ -27,24 +27,28 @@ class StorePatientData:
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtypes
 
-    def __call__(self, flask_request):
+    def __call__(self, flask_request, info):
         result = ""
         if serve.context.web:
             patient_name = flask_request.args.get("patient_name")
             value = float(flask_request.args.get("value"))
             value_type = flask_request.args.get("vtype")
-            if value_type in self.supported_vtypes:
-                patient_val_list = self.patient_data[patient_name][value_type]
-                patient_val_list.append(torch.tensor([[value]]))
-                if (len(patient_val_list) ==
-                        self.num_queries_dict[value_type]):
-                    data = torch.cat(patient_val_list, dim=1)
-                    data = torch.stack([data])
-                    ObjectID = self.service_handles_dict[value_type].remote(
-                        data=data
-                    )
-                    result = ray.get(ObjectID)
-                    patient_val_list.clear()
-                else:
-                    result = "Data recorded"
+        else:
+            patient_name = info["patient_name"]
+            value = info["value"]
+            value_type = info["vtype"]
+        if value_type in self.supported_vtypes:
+            patient_val_list = self.patient_data[patient_name][value_type]
+            patient_val_list.append(torch.tensor([[value]]))
+            if (len(patient_val_list) ==
+                    self.num_queries_dict[value_type]):
+                data = torch.cat(patient_val_list, dim=1)
+                data = torch.stack([data])
+                ObjectID = self.service_handles_dict[value_type].remote(
+                    data=data
+                )
+                result = ray.get(ObjectID)
+                patient_val_list.clear()
+            else:
+                result = "Data recorded"
         return result

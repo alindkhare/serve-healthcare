@@ -31,17 +31,22 @@ else:
     hw = 'cpu'
 # initiate serve
 p = Path("Resnet1d_base_filters={},kernel_size={},n_block={}"
-         "_{}_7600_queries.jsonl".format(base_filters, kernel_size, n_block, hw))
+         "_{}_7600_queries_ray_serve.jsonl".format(base_filters, kernel_size, n_block, hw))
 p.touch()
 os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
 serve.init(blocking=True)
 
-lambda kwargs_creator: {'data': 0.}
+lambda kwargs_creator: {'info': {"patient_name": "Adam",
+                                 "value": 0.0,
+                                 "vtype": "ECG"
+                                 }
+                        }
 
 # create ECG service
 serve.create_endpoint("ECG")
 # create data point service
-serve.create_endpoint("hospital", route="/hospital")
+serve.create_endpoint("hospital", route="/hospital",
+                      kwargs_creator=kwargs_creator)
 
 # create backend
 b_config = BackendConfig(num_replicas=1)
