@@ -35,7 +35,7 @@ class StorePatientData:
             value_type = flask_request.args.get("vtype")
             if value_type in self.supported_vtypes:
                 patient_val_list = self.patient_data[patient_name][value_type]
-                patient_val_list.append([[value]])
+                patient_val_list.append(torch.tensor([[value]]))
                 if (len(patient_val_list) ==
                         self.num_queries_dict[value_type]):
                     data = torch.cat(patient_val_list, dim=1)
@@ -43,8 +43,7 @@ class StorePatientData:
                     ObjectID = self.service_handles_dict[value_type].remote(
                         data=data
                     )
-                    # result = ray.get(ObjectID)
-                    result = ObjectID.binary()
+                    result = ray.get(ObjectID)
                     patient_val_list.clear()
                 else:
                     result = "Data recorded"
