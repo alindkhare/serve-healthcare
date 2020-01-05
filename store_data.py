@@ -27,7 +27,7 @@ class StorePatientData:
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtypes
 
-    def __call__(self, flask_request, info):
+    def __call__(self, flask_request, info={}):
         result = ""
         # when client requests via web context
         if serve.context.web:
