@@ -4,4 +4,4 @@
 [submodule "ray"]
 	path = ray
 	url = https://github.com/alindkhare/ray.git
-	branch = no-http-service-profiling
+	branch = serve-health-pipeline-profile
