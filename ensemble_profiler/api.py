@@ -3,6 +3,8 @@ from pathlib import Path
 import os
 from ray.experimental.serve import BackendConfig
 import ray.experimental.serve as serve
+import ray
+
 from ensemble_profiler.constants import (SERVICE_STORE_ECG_DATA,
                                          MODEL_SERVICE_ECG_PREFIX,
                                          AGGREGATE_PREDICTIONS,
