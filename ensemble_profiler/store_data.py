@@ -17,16 +17,19 @@ class StorePatientData:
             to wait for a value type. 
     """
 
-    def __init__(self, service_handles_dict, num_queries_dict,
-                 supported_vtypes=["ECG"]):
-        self.service_handles_dict = service_handles_dict
+    def __init__(self, num_queries_dict, supported_vtype="ECG"):
         self.num_queries_dict = num_queries_dict
         # store every patient data in a dictionary
         # patient_name -> { value_type: [values, ...]}
         self.patient_data = defaultdict(lambda: defaultdict(list))
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtypes
-
+    
+    def __predicate__(self, result):
+        if isinstance(result,torch.Tensor):
+            return True    
+        return False
+        
     def __call__(self, flask_request, info={}):
         result = ""
         # when client requests via web context
@@ -39,24 +42,17 @@ class StorePatientData:
             patient_name = info["patient_name"]
             value = info["value"]
             value_type = info["vtype"]
-        if value_type in self.supported_vtypes:
+        if value_type == self.supported_vtypes:
             # append the data point to the patient's stored data structure
             patient_val_list = self.patient_data[patient_name][value_type]
             patient_val_list.append(torch.tensor([[value]]))
             # check for prediction
-            if (len(patient_val_list) ==
-                    self.num_queries_dict[value_type]):
-                # prepare data for prediction
+            if (len(patient_val_list) == self.num_queries_dict[value_type]):
                 data = torch.cat(patient_val_list, dim=1)
                 data = torch.stack([data])
-                # submit prediction task
-                ObjectID = self.service_handles_dict[value_type].remote(
-                    data=data
-                )
-                # wait for prediction
-                result = ray.get(ObjectID)
+                result = data
                 # clear the data for next queries to be recorded
                 patient_val_list.clear()
             else:
-                result = "Data recorded"
+                result = "Data Recorded"
         return result

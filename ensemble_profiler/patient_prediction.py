@@ -13,7 +13,7 @@ class PytorchPredictorECG:
         self.model = model
         if cuda:
             self.model = self.model.cuda()
-
+        
     def __call__(self, flask_request, data):
         if self.cuda:
             data = data.cuda()
