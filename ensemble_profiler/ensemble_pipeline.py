@@ -32,7 +32,7 @@ class EnsemblePipeline:
         self.service_handles[AGGREGATE_PREDICTIONS].remote(
             **kwargs_for_aggregate,
             predicate_condition= ecg_predicate_object_id,
-            default_value = ("kwargs",model_service[0]),
+            default_value = ("kwargs",self.model_services[0]),
             return_object_ids={serve.RESULT_KEY: aggregate_object_id}
         )
         return aggregate_object_id
