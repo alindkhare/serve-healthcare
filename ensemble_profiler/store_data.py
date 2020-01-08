@@ -23,7 +23,7 @@ class StorePatientData:
         # patient_name -> { value_type: [values, ...]}
         self.patient_data = defaultdict(lambda: defaultdict(list))
         # value_type: ECG (supported right now), vitals etc.
-        self.supported_vtypes = supported_vtypes
+        self.supported_vtypes = supported_vtype
     
     def __predicate__(self, result):
         if isinstance(result,torch.Tensor):
