@@ -15,6 +15,8 @@ Installation details can be found [here](https://golang.org/doc/install).
 4. `cd ../../`
 ### Installing Python Packages
 1. `pip install -r requirement.txt`
+### Installing Profiling library library 
+1. `pip install -e . --verbose`
 ### Running the profiling code
 Running `python profile.py` populates `.jsonl` file for time taken by each query.
 Using `.jsonl` file following can be plotted - 
