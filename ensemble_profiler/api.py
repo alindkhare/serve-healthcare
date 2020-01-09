@@ -16,7 +16,7 @@ from ensemble_profiler.ensemble_predictions import Aggregate
 from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
 from ensemble_profiler.server import HTTPActor
 import time
-
+package_directory = os.path.dirname(os.path.abspath(__file__))
 def profile_ensemble(model_list, filename):
     serve.init(blocking=True)
     os.environ["ENSEMBLE_PROFILE_PATH"] = filename
@@ -63,9 +63,10 @@ def profile_ensemble(model_list, filename):
     time.sleep(2)
 
     # fire client
+    client_path = os.path.join(package_directory, "patient_client.go")
     procs = []
     for _ in range(1):
-        ls_output = subprocess.Popen(["go", "run", "patient_client.go"])
+        ls_output = subprocess.Popen(["go", "run", client_path])
         procs.append(ls_output)
     for p in procs:
         p.wait()
