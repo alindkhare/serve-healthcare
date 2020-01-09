@@ -8,16 +8,18 @@ import ray
 from ensemble_profiler.constants import (SERVICE_STORE_ECG_DATA,
                                          MODEL_SERVICE_ECG_PREFIX,
                                          AGGREGATE_PREDICTIONS,
-                                         BACKEND_PREFIX)
+                                         BACKEND_PREFIX, 
+                                         ROUTE_ADDRESS)
 from ensemble_profiler.store_data import StorePatientData
 from ensemble_profiler.patient_prediction import PytorchPredictorECG
 from ensemble_profiler.ensemble_predictions import Aggregate
 from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
-
+from ensemble_profiler.server import HTTPActor
+import time
 
 def profile_ensemble(model_list, filename):
     serve.init(blocking=True)
-    os.environ["SERVE_PROFILE_PATH"] = filename
+    os.environ["ENSEMBLE_PROFILE_PATH"] = filename
     
     all_services = []
     # create relevant services
@@ -54,10 +56,18 @@ def profile_ensemble(model_list, filename):
         service_handles[service] = serve.get_handle(service)
     
     pipeline = EnsemblePipeline(model_services, service_handles)
-    info = {"patient_name": "Adam",
-            "value": 0.0,
-            "vtype": "ECG"
-            }
-    result = ray.get(pipeline.remote(info=info))
-    print(result)
+    # start the http server
+    http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, pipeline)
+    http_actor_handle.run.remote()
+    # wait for http actor to get started
+    time.sleep(2)
+
+    # fire client
+    procs = []
+    for _ in range(1):
+        ls_output = subprocess.Popen(["go", "run", "patient_client.go"])
+        procs.append(ls_output)
+    for p in procs:
+        p.wait()
+        
     serve.shutdown()
