@@ -180,8 +180,9 @@ class HTTPProxy:
 
 @ray.remote
 class HTTPActor:
-    def __init__(self, address, pipeline):
-        self.app = HTTPProxy(address, pipeline)
+    def __init__(self, address, pipeline,
+                 file_name="/tmp/ensemble_profile.jsonl"):
+        self.app = HTTPProxy(address, pipeline, file_name)
 
     def run(self, host="0.0.0.0", port=5000):
         uvicorn.run(
