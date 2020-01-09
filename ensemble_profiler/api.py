@@ -18,6 +18,8 @@ from ensemble_profiler.server import HTTPActor
 import time
 package_directory = os.path.dirname(os.path.abspath(__file__))
 def profile_ensemble(model_list, file_path):
+    for i in range(len(model_list)):
+        model_list[i] = model_list[i].cuda()    
     serve.init(blocking=True)
     if not os.path.exists(str(file_path.resolve())):
         file_path.touch()
@@ -44,7 +46,7 @@ def profile_ensemble(model_list, file_path):
     for service, model in zip(model_services, model_list):
         b_config = BackendConfig(num_replicas=1)
         serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
-                            model, False, backend_config=b_config)
+                            model, True, backend_config=b_config)
     serve.create_backend(Aggregate, BACKEND_PREFIX+AGGREGATE_PREDICTIONS)
     
     # link services to backends
