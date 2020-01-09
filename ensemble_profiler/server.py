@@ -158,11 +158,10 @@ class HTTPProxy:
         }
 
         request_sent_time = time.time()
-        # await for request info to get back
-        req_info = await self.pipeline.remote(info=info)
-
+        
         # await for result
-        result = await next(iter(req_info))
+        result = await self.pipeline.remote(info=info)
+
         result_received_time = time.time()
         self.profile_file.write(
             json.dumps({
