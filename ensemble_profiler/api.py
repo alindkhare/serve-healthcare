@@ -21,7 +21,7 @@ def profile_ensemble(model_list, file_path):
     serve.init(blocking=True)
     if not os.path.exists(str(file_path.resolve())):
         file_path.touch()
-    os.environ["ENSEMBLE_PROFILE_PATH"] = str(file_path.resolve())
+    file_name = str(file_path.resolve())
     all_services = []
     # create relevant services
     serve.create_endpoint(SERVICE_STORE_ECG_DATA)
@@ -58,7 +58,7 @@ def profile_ensemble(model_list, file_path):
     
     pipeline = EnsemblePipeline(model_services, service_handles)
     # start the http server
-    http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, pipeline)
+    http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, pipeline, file_name)
     http_actor_handle.run.remote()
     # wait for http actor to get started
     time.sleep(2)

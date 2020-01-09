@@ -63,14 +63,13 @@ class HTTPProxy:
     # blocks forever
     """
 
-    def __init__(self, address, pipeline):
+    def __init__(self, address, pipeline,
+                 file_name="/tmp/ensemble_profile.jsonl"):
         assert ray.is_initialized()
         self.route_checker_should_shutdown = False
         self.address = address 
         self.pipeline = pipeline
-        self.profile_file = open(
-            os.environ.get(
-                "ENSEMBLE_PROFILE_PATH", "/tmp/ensemble_profile.jsonl"),"w")
+        self.profile_file = open(file_name,"w")
 
     async def handle_lifespan_message(self, scope, receive, send):
         assert scope["type"] == "lifespan"
