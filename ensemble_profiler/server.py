@@ -150,12 +150,12 @@ class HTTPProxy:
         # Hence enclosing http_body_bytes inside a list.
         # args = (scope, [http_body_bytes])
         # kwargs = dict()
-       flask_request = build_flask_request(scope,http_body_bytes)
-       info = {
-           "patient_name" : flask_request.args.get("patient_name"),
-           "value" : flask_request.args.get("value"),
-           "vtype" : flask_request.args.get("vtype")
-       }
+        flask_request = build_flask_request(scope,http_body_bytes)
+        info = {
+        "patient_name" : flask_request.args.get("patient_name"),
+        "value" : flask_request.args.get("value"),
+        "vtype" : flask_request.args.get("vtype")
+        }
 
         request_sent_time = time.time()
         # await for request info to get back
