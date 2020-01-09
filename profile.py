@@ -21,5 +21,5 @@ model = ResNet1D(in_channels=n_channel,
                  verbose=False)
 
 filename = "profile_results.jsonl"
-Path(filename).touch()
-profiler.profile_ensemble([model],filename)
+file_path = Path(filename)
+profiler.profile_ensemble([model],file_path)

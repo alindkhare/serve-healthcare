@@ -17,10 +17,11 @@ from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
 from ensemble_profiler.server import HTTPActor
 import time
 package_directory = os.path.dirname(os.path.abspath(__file__))
-def profile_ensemble(model_list, filename):
+def profile_ensemble(model_list, file_path):
     serve.init(blocking=True)
-    os.environ["ENSEMBLE_PROFILE_PATH"] = filename
-    
+    if not os.path.exists(str(file_path.resolve())):
+        file_path.touch()
+    os.environ["ENSEMBLE_PROFILE_PATH"] = str(file_path.resolve())
     all_services = []
     # create relevant services
     serve.create_endpoint(SERVICE_STORE_ECG_DATA)
