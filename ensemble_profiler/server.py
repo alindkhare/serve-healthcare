@@ -153,7 +153,7 @@ class HTTPProxy:
         flask_request = build_flask_request(scope,http_body_bytes)
         info = {
         "patient_name" : flask_request.args.get("patient_name"),
-        "value" : flask_request.args.get("value"),
+        "value" : float(flask_request.args.get("value")),
         "vtype" : flask_request.args.get("vtype")
         }
 
