@@ -42,7 +42,7 @@ def profile_ensemble(model_list, file_path):
         StorePatientData, BACKEND_PREFIX+SERVICE_STORE_ECG_DATA, {"ECG": 3750},
         backend_config=b_config_store_data)
     for service, model in zip(model_services, model_list):
-        b_config = BackendConfig(num_replicas=1)
+        b_config = BackendConfig(num_replicas=1, num_gpus=1)
         serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
                             model, True, backend_config=b_config)
     serve.create_backend(Aggregate, BACKEND_PREFIX+AGGREGATE_PREDICTIONS)
