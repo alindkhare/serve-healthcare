@@ -17,9 +17,7 @@ from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
 from ensemble_profiler.server import HTTPActor
 import time
 package_directory = os.path.dirname(os.path.abspath(__file__))
-def profile_ensemble(model_list, file_path):
-    for i in range(len(model_list)):
-        model_list[i] = model_list[i].cuda()    
+def profile_ensemble(model_list, file_path): 
     serve.init(blocking=True)
     if not os.path.exists(str(file_path.resolve())):
         file_path.touch()
