@@ -21,5 +21,5 @@ model = ResNet1D(in_channels=n_channel,
                  verbose=False)
 
 time, num_queries = profiler.calculate_throughput([model])
-throughput = time/float(num_queries)
+throughput = float(num_queries)/time
 print("Throughput is : {} QPS".format(throughput))
