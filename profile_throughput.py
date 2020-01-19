@@ -20,6 +20,6 @@ model = ResNet1D(in_channels=n_channel,
                  increasefilter_gap=max(n_block//4, 1),
                  verbose=False)
 
-filename = "profile_results.jsonl"
-file_path = Path(filename)
-profiler.profile_ensemble([model], file_path)
+time, num_queries = profiler.calculate_throughput([model])
+throughput = time/float(num_queries)
+print("Throughput is : {} QPS".format(throughput))

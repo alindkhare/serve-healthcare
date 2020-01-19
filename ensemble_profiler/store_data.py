@@ -24,12 +24,12 @@ class StorePatientData:
         self.patient_data = defaultdict(lambda: defaultdict(list))
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtype
-    
+
     def __predicate__(self, result):
-        if isinstance(result,torch.Tensor):
-            return True    
+        if isinstance(result, torch.Tensor):
+            return True
         return False
-        
+
     def __call__(self, flask_request, info={}):
         result = ""
         # when client requests via web context
