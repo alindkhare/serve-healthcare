@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 import os
 from ray.experimental.serve import BackendConfig
@@ -14,7 +13,6 @@ from ensemble_profiler.store_data_actor import StatefulPatientActor
 from ensemble_profiler.patient_prediction import PytorchPredictorECG
 from ensemble_profiler.ensemble_predictions import Aggregate
 from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
-from ensemble_profiler.server import HTTPActor
 import time
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
