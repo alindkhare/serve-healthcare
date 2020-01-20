@@ -75,7 +75,7 @@ def calculate_throughput(model_list, num_queries=300):
 
     # dummy request
     info = {
-        "patient_name": "adam",
+        "patient_name": PATIENT_NAME_PREFIX + str(0),
         "value": 1.0,
         "vtype": "ECG"
     }
