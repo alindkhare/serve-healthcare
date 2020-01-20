@@ -55,9 +55,7 @@ def _start_patient_actors(num_patients, pipeline, periodic_interval=3750):
     actor_handles = {}
     for patient_id in range(num_patients):
         patient_name = PATIENT_NAME_PREFIX + str(patient_id)
-        handle = StatefulPatientActor.options(
-            is_direct_actor=True, is_async=True
-        ).remote(
+        handle = StatefulPatientActor.options(is_asyncio=True).remote(
             patient_name=patient_name,
             pipeline=pipeline,
             periodic_interval=periodic_interval
