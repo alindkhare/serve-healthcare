@@ -20,7 +20,7 @@ class StatefulPatientActor:
         # when to make predicitons
         self.periodic_interval = periodic_interval
         # vtype -> [val1, val2, val3, ..]
-        self.patient_data = defaultdict(list)
+        self.patient_data = {}
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtype
         print("ACTOR STARTED: {}, {}".format(
@@ -37,8 +37,12 @@ class StatefulPatientActor:
         if value_type == self.supported_vtypes:
             result = "Data Recorded"
             # append the data point to the patient's stored data structure
-            patient_val_list = self.patient_data[value_type]
-            patient_val_list.append(torch.tensor([[value]]))
+
+            if value_type in self.patient_data:
+                self.patient_data[value_type].append(torch.tensor([[value]]))
+            else:
+                self.patient_data[value_type] = [torch.tensor([[value]])]
+
             # if len(patient_val_list) == self.periodic_interval:
             #     data = torch.cat(patient_val_list, dim=1)
             #     data = torch.stack([data])
