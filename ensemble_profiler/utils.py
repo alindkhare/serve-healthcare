@@ -19,7 +19,7 @@ import time
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 
-def _create_services(model_list):
+def create_services(model_list):
     all_services = []
     # create relevant services
     model_services = []
@@ -50,7 +50,7 @@ def _create_services(model_list):
     return pipeline
 
 
-def _start_patient_actors(num_patients, pipeline, periodic_interval=3750):
+def start_patient_actors(num_patients, pipeline, periodic_interval=3750):
     # start actor for collecting patients_data
     actor_handles = {}
     for patient_id in range(num_patients):
@@ -62,59 +62,3 @@ def _start_patient_actors(num_patients, pipeline, periodic_interval=3750):
         )
         actor_handles[patient_name] = handle
     return actor_handles
-
-
-def calculate_throughput(model_list, num_queries=300):
-    serve.init(blocking=True)
-    pipeline = _create_services(model_list)
-
-    actor_handles = _start_patient_actors(num_patients=1, pipeline=pipeline)
-    patient_handle = list(actor_handles.values())[0]
-
-    future_list = []
-
-    # dummy request
-    info = {
-        "patient_name": PATIENT_NAME_PREFIX + str(0),
-        "value": 1.0,
-        "vtype": "ECG"
-    }
-    start_time = time.time()
-    for _ in range(num_queries):
-        fut = patient_handle.get_periodic_predictions.remote(info=info)
-        future_list.append(fut)
-    ray.get(future_list)
-    end_time = time.time()
-    serve.shutdown()
-    return end_time - start_time, num_queries
-
-
-def profile_ensemble(model_list, file_path, num_patients=1):
-    serve.init(blocking=True)
-    if not os.path.exists(str(file_path.resolve())):
-        file_path.touch()
-    file_name = str(file_path.resolve())
-
-    # create the pipeline
-    pipeline = _create_services(model_list)
-
-    # create patient handles
-    actor_handles = _start_patient_actors(num_patients=num_patients,
-                                          pipeline=pipeline)
-
-    # start the http server
-    http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, actor_handles,
-                                         file_name)
-    http_actor_handle.run.remote()
-    # wait for http actor to get started
-    time.sleep(2)
-
-    # fire client
-    client_path = os.path.join(package_directory, "patient_client.go")
-    procs = []
-    for patient_name in actor_handles.keys():
-        ls_output = subprocess.Popen(["go", "run", client_path, patient_name])
-        procs.append(ls_output)
-    for p in procs:
-        p.wait()
-    serve.shutdown()
