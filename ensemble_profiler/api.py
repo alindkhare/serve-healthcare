@@ -67,6 +67,7 @@ def _start_patient_actors(num_patients, pipeline, periodic_interval=3750):
 
 def profile_ensemble(model_list, file_path, num_patients=1):
     serve.init(blocking=True)
+    print("hahahahhaha")
     if not os.path.exists(str(file_path.resolve())):
         file_path.touch()
     file_name = str(file_path.resolve())
@@ -98,6 +99,7 @@ def profile_ensemble(model_list, file_path, num_patients=1):
 
 def calculate_throughput(model_list, num_queries=300):
     serve.init(blocking=True)
+    print("Call me")
     pipeline = _create_services(model_list)
 
     actor_handles = _start_patient_actors(num_patients=1, pipeline=pipeline)
