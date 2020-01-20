@@ -6,7 +6,7 @@ import time
 from ensemble_profiler.server import HTTPActor
 import subprocess
 from ensemble_profiler.constants import ROUTE_ADDRESS
-package_directory = os.path.dirname(os.path.abspath(__file__))
+# package_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 def profile_ensemble(model_list, file_path, num_patients=1,
@@ -32,7 +32,7 @@ def profile_ensemble(model_list, file_path, num_patients=1,
 
     # fire client
     if fire_clients:
-        client_path = os.path.join(package_directory, "patient_client.go")
+        client_path = "patient_client.go"
         procs = []
         for patient_name in actor_handles.keys():
             ls_output = subprocess.Popen(
