@@ -35,18 +35,18 @@ class StatefulPatientActor:
         value_type = info["vtype"]
         result = ""
         if value_type == self.supported_vtypes:
-            result = torch.tensor([[value]])
+            result = value
         return result
 
-            # append the data point to the patient's stored data structure
+        # append the data point to the patient's stored data structure
 
-            # if value_type in self.patient_data:
-            #     self.patient_data[value_type].append(torch.tensor([[value]]))
-            # else:
-            #     self.patient_data[value_type] = [torch.tensor([[value]])]
+        # if value_type in self.patient_data:
+        #     self.patient_data[value_type].append(torch.tensor([[value]]))
+        # else:
+        #     self.patient_data[value_type] = [torch.tensor([[value]])]
 
-            # if len(patient_val_list) == self.periodic_interval:
-            #     data = torch.cat(patient_val_list, dim=1)
-            #     data = torch.stack([data])
-            #     patient_val_list.clear()
-            #     result = ray.get(self.pipeline.remote(data=data))
+        # if len(patient_val_list) == self.periodic_interval:
+        #     data = torch.cat(patient_val_list, dim=1)
+        #     data = torch.stack([data])
+        #     patient_val_list.clear()
+        #     result = ray.get(self.pipeline.remote(data=data))
