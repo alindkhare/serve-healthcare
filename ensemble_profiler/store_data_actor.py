@@ -23,7 +23,7 @@ class StatefulPatientActor:
         self.patient_data = defaultdict(list)
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtype
-        print("ACTOR STARTED")
+        print("ACTOR STARTED: {}".format(self.patient_name))
 
     def get_periodic_predictions(self, info):
         # print(self.pipeline)
