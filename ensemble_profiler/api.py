@@ -115,14 +115,14 @@ def calculate_throughput(model_list, num_queries=20):
         "value": 1.0,
         "vtype": "ECG"
     }
-    # d = ray.get(patient_handle.get_periodic_predictions.remote(info=info))
-    # print(d)
-    # return
-    start_time = time.time()
-    for _ in range(num_queries):
-        fut = patient_handle.get_periodic_predictions.remote(info=info)
-        future_list.append(fut)
-    result = ray.get(future_list)
-    end_time = time.time()
-    serve.shutdown()
-    return end_time - start_time, num_queries
+    d = ray.get(patient_handle.get_periodic_predictions.remote(info=info))
+    print(d)
+    return
+    # start_time = time.time()
+    # for _ in range(num_queries):
+    #     fut = patient_handle.get_periodic_predictions.remote(info=info)
+    #     future_list.append(fut)
+    # result = ray.get(future_list)
+    # end_time = time.time()
+    # serve.shutdown()
+    # return end_time - start_time, num_queries
