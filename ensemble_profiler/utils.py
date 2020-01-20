@@ -14,7 +14,6 @@ from ensemble_profiler.patient_prediction import PytorchPredictorECG
 from ensemble_profiler.ensemble_predictions import Aggregate
 from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
 import time
-package_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 def create_services(model_list):
