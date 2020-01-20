@@ -1,6 +1,6 @@
 import ray
 from collections import defaultdict
-import torch
+# import torch
 
 
 @ray.remote
@@ -34,6 +34,7 @@ class StatefulPatientActor:
         value = info["value"]
         value_type = info["vtype"]
         result = ""
+        import torch
         if value_type == self.supported_vtypes:
             result = torch.tensor([value])
         return result
