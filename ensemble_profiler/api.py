@@ -84,7 +84,7 @@ def calculate_throughput(model_list, num_queries=300):
     for _ in range(num_queries):
         fut = patient_handle.get_periodic_predictions.remote(info=info)
         future_list.append(fut)
-    ray.get(future_list)
+    result = ray.get(future_list)
     end_time = time.time()
     serve.shutdown()
     return end_time - start_time, num_queries
