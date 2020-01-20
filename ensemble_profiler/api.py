@@ -106,19 +106,21 @@ def calculate_throughput(model_list, num_queries=300):
     print(actor_handles)
     patient_handle = list(actor_handles.values())[0]
     print(patient_handle)
-    return
 
     # future_list = []
 
     # # dummy request
-    # info = {
-    #     "patient_name": PATIENT_NAME_PREFIX + str(0),
-    #     "value": 1.0,
-    #     "vtype": "ECG"
-    # }
+    info = {
+        "patient_name": PATIENT_NAME_PREFIX + str(0),
+        "value": 1.0,
+        "vtype": "ECG"
+    }
+    d = ray.get(patient_handle.get_periodic_predictions.remote(info=info))
+    print(d)
+    return
     # start_time = time.time()
     # for _ in range(num_queries):
-    #     fut = patient_handle.get_periodic_predictions.remote(info=info)
+    #     fut =
     #     future_list.append(fut)
     # result = ray.get(future_list)
     # end_time = time.time()
