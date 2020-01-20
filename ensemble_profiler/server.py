@@ -63,13 +63,13 @@ class HTTPProxy:
     # blocks forever
     """
 
-    def __init__(self, address, pipeline,
+    def __init__(self, address, actor_handles,
                  file_name="/tmp/ensemble_profile.jsonl"):
         assert ray.is_initialized()
         self.route_checker_should_shutdown = False
-        self.address = address 
-        self.pipeline = pipeline
-        self.profile_file = open(file_name,"w")
+        self.address = address
+        self.actor_handles = actor_handles
+        self.profile_file = open(file_name, "w")
 
     async def handle_lifespan_message(self, scope, receive, send):
         assert scope["type"] == "lifespan"
@@ -93,8 +93,6 @@ class HTTPProxy:
             body_buffer.append(message["body"])
 
         return b"".join(body_buffer)
-
-    
 
     async def __call__(self, scope, receive, send):
         # NOTE: This implements ASGI protocol specified in
@@ -121,7 +119,6 @@ class HTTPProxy:
                 }, status_code=404)(scope, receive, send)
             return
 
-
         http_body_bytes = await self.receive_http_body(scope, receive, send)
 
         # get slo_ms before enqueuing the query
@@ -143,23 +140,29 @@ class HTTPProxy:
                 await JSONResponse({"error": str(e)})(scope, receive, send)
                 return
 
-
         # TODO(alind): File a Ray issue if args contain b"" it is not
         #              received.
         # Hence enclosing http_body_bytes inside a list.
         # args = (scope, [http_body_bytes])
         # kwargs = dict()
-        flask_request = build_flask_request(scope,http_body_bytes)
+        flask_request = build_flask_request(scope, http_body_bytes)
         info = {
-        "patient_name" : flask_request.args.get("patient_name"),
-        "value" : float(flask_request.args.get("value")),
-        "vtype" : flask_request.args.get("vtype")
+            "patient_name": flask_request.args.get("patient_name"),
+            "value": float(flask_request.args.get("value")),
+            "vtype": flask_request.args.get("vtype")
         }
+        if info["patient_name"] not in self.actor_handles:
+            await JSONResponse(
+                {
+                    "error": "Patient not registered"
+                }, status_code=404)(scope, receive, send)
+            return
+        handle = self.actor_handles[info["patient_name"]]
 
         request_sent_time = time.time()
-        
+
         # await for result
-        result = await self.pipeline.remote(info=info)
+        result = await self.handle.get_periodic_predictions.remote(info=info)
 
         result_received_time = time.time()
         self.profile_file.write(
@@ -180,9 +183,9 @@ class HTTPProxy:
 
 @ray.remote
 class HTTPActor:
-    def __init__(self, address, pipeline,
+    def __init__(self, address, actor_handles,
                  file_name="/tmp/ensemble_profile.jsonl"):
-        self.app = HTTPProxy(address, pipeline, file_name)
+        self.app = HTTPProxy(address, actor_handles, file_name)
 
     def run(self, host="0.0.0.0", port=5000):
         uvicorn.run(

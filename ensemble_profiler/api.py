@@ -5,12 +5,12 @@ from ray.experimental.serve import BackendConfig
 import ray.experimental.serve as serve
 import ray
 
-from ensemble_profiler.constants import (SERVICE_STORE_ECG_DATA,
-                                         MODEL_SERVICE_ECG_PREFIX,
+from ensemble_profiler.constants import (MODEL_SERVICE_ECG_PREFIX,
                                          AGGREGATE_PREDICTIONS,
                                          BACKEND_PREFIX,
-                                         ROUTE_ADDRESS)
-from ensemble_profiler.store_data import StorePatientData
+                                         ROUTE_ADDRESS,
+                                         PATIENT_NAME_PREFIX)
+from ensemble_profiler.store_data_actor import StatefulPatientActor
 from ensemble_profiler.patient_prediction import PytorchPredictorECG
 from ensemble_profiler.ensemble_predictions import Aggregate
 from ensemble_profiler.ensemble_pipeline import EnsemblePipeline
@@ -22,8 +22,6 @@ package_directory = os.path.dirname(os.path.abspath(__file__))
 def _create_services(model_list):
     all_services = []
     # create relevant services
-    serve.create_endpoint(SERVICE_STORE_ECG_DATA)
-    all_services.append(SERVICE_STORE_ECG_DATA)
     model_services = []
     for i in range(len(model_list)):
         model_service_name = MODEL_SERVICE_ECG_PREFIX + "::" + str(i)
@@ -33,12 +31,6 @@ def _create_services(model_list):
     serve.create_endpoint(AGGREGATE_PREDICTIONS)
     all_services.append(AGGREGATE_PREDICTIONS)
 
-    # create backends
-    num_queries_dict = {"ECG": 3750}
-    b_config_store_data = BackendConfig(num_replicas=1, enable_predicate=True)
-    serve.create_backend(
-        StorePatientData, BACKEND_PREFIX+SERVICE_STORE_ECG_DATA, {"ECG": 3750},
-        backend_config=b_config_store_data)
     for service, model in zip(model_services, model_list):
         b_config = BackendConfig(num_replicas=1, num_gpus=1)
         serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
@@ -58,9 +50,29 @@ def _create_services(model_list):
     return pipeline
 
 
+def _start_patient_actors(num_patients, pipeline, periodic_interval=3750):
+    # start actor for collecting patients_data
+    actor_handles = {}
+    for patient_id in range(num_patients):
+        patient_name = PATIENT_NAME_PREFIX + str(patient_id)
+        handle = StatefulPatientActor.options(
+            is_direct_actor=True, is_async=True
+        ).remote(
+            patient_name=patient_name,
+            pipeline=pipeline,
+            periodic_interval=periodic_interval
+        )
+        actor_handles[patient_name] = handle
+    return actor_handles
+
+
 def calculate_throughput(model_list, num_queries=300):
     serve.init(blocking=True)
     pipeline = _create_services(model_list)
+
+    actor_handles = _start_patient_actors(num_patients=1, pipeline=pipeline)
+    patient_handle = list(actor_handles)[0]
+
     future_list = []
 
     # dummy request
@@ -71,7 +83,7 @@ def calculate_throughput(model_list, num_queries=300):
     }
     start_time = time.time()
     for _ in range(num_queries):
-        fut = pipeline.remote(info=info)
+        fut = patient_handle.get_periodic_predictions.remote(info=info)
         future_list.append(fut)
     ray.get(future_list)
     end_time = time.time()
@@ -79,7 +91,7 @@ def calculate_throughput(model_list, num_queries=300):
     return end_time - start_time, num_queries
 
 
-def profile_ensemble(model_list, file_path):
+def profile_ensemble(model_list, file_path, num_patients=1):
     serve.init(blocking=True)
     if not os.path.exists(str(file_path.resolve())):
         file_path.touch()
@@ -88,8 +100,13 @@ def profile_ensemble(model_list, file_path):
     # create the pipeline
     pipeline = _create_services(model_list)
 
+    # create patient handles
+    actor_handles = _start_patient_actors(num_patients=num_patients,
+                                          pipeline=pipeline)
+
     # start the http server
-    http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, pipeline, file_name)
+    http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, actor_handles,
+                                         file_name)
     http_actor_handle.run.remote()
     # wait for http actor to get started
     time.sleep(2)
@@ -97,8 +114,8 @@ def profile_ensemble(model_list, file_path):
     # fire client
     client_path = os.path.join(package_directory, "patient_client.go")
     procs = []
-    for _ in range(1):
-        ls_output = subprocess.Popen(["go", "run", client_path])
+    for patient_name in actor_handles.keys():
+        ls_output = subprocess.Popen(["go", "run", client_path, patient_name])
         procs.append(ls_output)
     for p in procs:
         p.wait()

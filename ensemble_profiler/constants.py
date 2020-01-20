@@ -12,3 +12,6 @@ BACKEND_PREFIX = "backend::"
 
 #: Route Address which http server serves
 ROUTE_ADDRESS = "/hospital"
+
+#: Patient name prefix
+PATIENT_NAME_PREFIX = "patient"
