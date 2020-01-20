@@ -101,23 +101,24 @@ def calculate_throughput(model_list, num_queries=300):
     serve.init(blocking=True)
     print("Call me")
     pipeline = _create_services(model_list)
+    return
 
-    actor_handles = _start_patient_actors(num_patients=1, pipeline=pipeline)
-    patient_handle = list(actor_handles.values())[0]
+    # actor_handles = _start_patient_actors(num_patients=1, pipeline=pipeline)
+    # patient_handle = list(actor_handles.values())[0]
 
-    future_list = []
+    # future_list = []
 
-    # dummy request
-    info = {
-        "patient_name": PATIENT_NAME_PREFIX + str(0),
-        "value": 1.0,
-        "vtype": "ECG"
-    }
-    start_time = time.time()
-    for _ in range(num_queries):
-        fut = patient_handle.get_periodic_predictions.remote(info=info)
-        future_list.append(fut)
-    result = ray.get(future_list)
-    end_time = time.time()
-    serve.shutdown()
-    return end_time - start_time, num_queries
+    # # dummy request
+    # info = {
+    #     "patient_name": PATIENT_NAME_PREFIX + str(0),
+    #     "value": 1.0,
+    #     "vtype": "ECG"
+    # }
+    # start_time = time.time()
+    # for _ in range(num_queries):
+    #     fut = patient_handle.get_periodic_predictions.remote(info=info)
+    #     future_list.append(fut)
+    # result = ray.get(future_list)
+    # end_time = time.time()
+    # serve.shutdown()
+    # return end_time - start_time, num_queries
