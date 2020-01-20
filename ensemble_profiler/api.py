@@ -103,8 +103,10 @@ def calculate_throughput(model_list, num_queries=300):
     pipeline = _create_services(model_list)
 
     actor_handles = _start_patient_actors(num_patients=1, pipeline=pipeline)
+    print(actor_handles)
+    patient_handle = list(actor_handles.values())[0]
+    print(patient_handle)
     return
-    # patient_handle = list(actor_handles.values())[0]
 
     # future_list = []
 
