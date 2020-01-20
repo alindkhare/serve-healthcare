@@ -38,10 +38,10 @@ class StatefulPatientActor:
             result = "Data Recorded"
             # append the data point to the patient's stored data structure
 
-            if value_type in self.patient_data:
-                self.patient_data[value_type].append(torch.tensor([[value]]))
-            else:
-                self.patient_data[value_type] = [torch.tensor([[value]])]
+            # if value_type in self.patient_data:
+            #     self.patient_data[value_type].append(torch.tensor([[value]]))
+            # else:
+            #     self.patient_data[value_type] = [torch.tensor([[value]])]
 
             # if len(patient_val_list) == self.periodic_interval:
             #     data = torch.cat(patient_val_list, dim=1)
