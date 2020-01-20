@@ -35,7 +35,7 @@ class StatefulPatientActor:
         value_type = info["vtype"]
         result = ""
         if value_type == self.supported_vtypes:
-            result = value
+            result = torch.tensor([value])
         return result
 
         # append the data point to the patient's stored data structure
