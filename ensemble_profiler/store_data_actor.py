@@ -26,16 +26,15 @@ class StatefulPatientActor:
         print("ACTOR STARTED")
 
     def get_periodic_predictions(self, info):
-        print(self.pipeline)
-        return info
-        # for profiling via kwargs
-        # patient_name = info["patient_name"]
-        # assert patient_name == self.patient_name
-        # value = info["value"]
-        # value_type = info["vtype"]
-        # result = ""
-        # if value_type == self.supported_vtypes:
-        #     result = "Data Recorded"
+        # print(self.pipeline)
+        # return info
+        patient_name = info["patient_name"]
+        assert patient_name == self.patient_name
+        value = info["value"]
+        value_type = info["vtype"]
+        result = ""
+        if value_type == self.supported_vtypes:
+            result = "Data Recorded"
         #     # append the data point to the patient's stored data structure
         #     patient_val_list = self.patient_data[value_type]
         #     patient_val_list.append(torch.tensor([[value]]))
