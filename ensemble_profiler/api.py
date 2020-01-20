@@ -97,7 +97,7 @@ def profile_ensemble(model_list, file_path, num_patients=1):
     serve.shutdown()
 
 
-def calculate_throughput(model_list, num_queries=300):
+def calculate_throughput(model_list, num_queries=20):
     serve.init(blocking=True)
     print("Call me")
     pipeline = _create_services(model_list)
@@ -107,22 +107,22 @@ def calculate_throughput(model_list, num_queries=300):
     patient_handle = list(actor_handles.values())[0]
     print(patient_handle)
 
-    # future_list = []
+    future_list = []
 
-    # # dummy request
+    # dummy request
     info = {
         "patient_name": PATIENT_NAME_PREFIX + str(0),
         "value": 1.0,
         "vtype": "ECG"
     }
-    d = ray.get(patient_handle.get_periodic_predictions.remote(info=info))
-    print(d)
-    return
-    # start_time = time.time()
-    # for _ in range(num_queries):
-    #     fut =
-    #     future_list.append(fut)
-    # result = ray.get(future_list)
-    # end_time = time.time()
-    # serve.shutdown()
-    # return end_time - start_time, num_queries
+    # d = ray.get(patient_handle.get_periodic_predictions.remote(info=info))
+    # print(d)
+    # return
+    start_time = time.time()
+    for _ in range(num_queries):
+        fut =
+        future_list.append(fut)
+    result = ray.get(future_list)
+    end_time = time.time()
+    serve.shutdown()
+    return end_time - start_time, num_queries
