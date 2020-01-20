@@ -36,6 +36,7 @@ class StatefulPatientActor:
         result = ""
         if value_type == self.supported_vtypes:
             result = torch.tensor([[value]]
+        return result
 
             # append the data point to the patient's stored data structure
 
@@ -49,4 +50,3 @@ class StatefulPatientActor:
             #     data = torch.stack([data])
             #     patient_val_list.clear()
             #     result = ray.get(self.pipeline.remote(data=data))
-        return result
