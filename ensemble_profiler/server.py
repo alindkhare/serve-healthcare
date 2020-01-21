@@ -105,7 +105,8 @@ class HTTPProxy:
         assert scope["type"] == "http"
         current_path = scope["path"]
         if current_path == "/":
-            await JSONResponse(self.route_table_cache)(scope, receive, send)
+            await JSONResponse({"supported path": self.address})(scope,
+                                                                 receive, send)
             return
 
         # TODO(simon): Use werkzeug route mapper to support variable path
