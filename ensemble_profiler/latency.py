@@ -12,7 +12,7 @@ package_directory = os.path.dirname(os.path.abspath(__file__))
 def profile_ensemble(model_list, file_path, num_patients=1,
                      http_host="0.0.0.0", fire_clients=True):
     if not ray.is_initialized():
-        serve.init(blocking=True)
+        serve.init(blocking=True, http_port=5000)
         if not os.path.exists(str(file_path.resolve())):
             file_path.touch()
         file_name = str(file_path.resolve())
@@ -27,7 +27,7 @@ def profile_ensemble(model_list, file_path, num_patients=1,
         # start the http server
         http_actor_handle = HTTPActor.remote(ROUTE_ADDRESS, actor_handles,
                                              file_name)
-        http_actor_handle.run.remote(host=http_host)
+        http_actor_handle.run.remote(host=http_host,port=8000)
         # wait for http actor to get started
         time.sleep(2)
 
