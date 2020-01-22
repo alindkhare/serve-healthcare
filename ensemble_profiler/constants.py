@@ -15,3 +15,6 @@ ROUTE_ADDRESS = "/hospital"
 
 #: Patient name prefix
 PATIENT_NAME_PREFIX = "patient"
+
+#: nursery actor name
+NURSERY_ACTOR = "HEALTH_SRTML_PATIENT_NURSERY"
