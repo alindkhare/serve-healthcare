@@ -1,3 +1,4 @@
+import ray
 @ray.remote
 class PatientActorNursery:
     """Initialize and store all actor handles. Taken from Ray serve Nursery.
