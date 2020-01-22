@@ -191,4 +191,4 @@ class HTTPActor:
     def run(self, host="0.0.0.0", port=5000):
         uvicorn.run(
             self.app, host=host, port=port, lifespan="on", access_log=False,
-            workers=4, limit_concurrency=sys.maxsize, limit_max_requests=sys.maxsize)
+            workers=4, limit_concurrency=sys.maxsize, reload=False, limit_max_requests=sys.maxsize)
