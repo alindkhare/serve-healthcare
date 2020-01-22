@@ -24,7 +24,7 @@ class StatefulPatientActor:
         # value_type: ECG (supported right now), vitals etc.
         self.supported_vtypes = supported_vtype
 
-    def get_periodic_predictions(self, info):
+    async def get_periodic_predictions(self, info):
         # for profiling via kwargs
         patient_name = info["patient_name"]
         assert patient_name == self.patient_name
@@ -40,5 +40,5 @@ class StatefulPatientActor:
                 data = torch.cat(patient_val_list, dim=1)
                 data = torch.stack([data])
                 patient_val_list.clear()
-                result = ray.get(self.pipeline.remote(data=data))
+                result = await self.pipeline.remote(data=data)
         return result

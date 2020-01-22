@@ -13,9 +13,14 @@ class PatientActorNursery:
         # Dict: Actor handles -> tag
         self.actor_handles = dict()
 
-    def start_actor(self, actor_cls, tag, init_args=(), init_kwargs={}):
+    def start_actor(self, actor_cls, tag, init_args=(),
+                    init_kwargs={}, is_asyncio=False):
         """Start an actor and add it to the nursery"""
-        handle = actor_cls.remote(*init_args, **init_kwargs)
+        if not is_asyncio:
+            handle = actor_cls.remote(*init_args, **init_kwargs)
+        else:
+            handle = actor_cls.options(is_direct_call=True,
+                                       is_asyncio=True).remote(*init_args, **init_kwargs)
         self.actor_handles[handle] = tag
         return [handle]
 

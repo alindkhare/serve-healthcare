@@ -67,7 +67,8 @@ def start_patient_actors(num_patients, pipeline,
                                                            patient_name,
                                                        "pipeline": pipeline,
                                                        "periodic_interval":
-                                                           periodic_interval})
+                                                           periodic_interval},
+                                                   is_asyncio=True)
         handle = ray.get(obj_id)[0]
         actor_handles[patient_name] = handle
     return actor_handles
