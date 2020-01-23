@@ -30,15 +30,15 @@ def profile_ensemble(model_list, file_path, num_patients=1,
 
         # start the http server
         # obj_id = nursery_handle.start_actor.remote(HTTPActor,
-                                                   "HEALTH_HTTP_SERVER",
-                                                   init_args = [ROUTE_ADDRESS,
-                                                              actor_handles,
-                                                              file_name])
+        #    "HEALTH_HTTP_SERVER",
+        #    init_args = [ROUTE_ADDRESS,
+        #               actor_handles,
+        #               file_name])
         # http_actor_handle = ray.get(obj_id)[0]
         # http_actor_handle.run.remote(host=http_host, port=8000)
         # wait for http actor to get started
-        http_server=HTTPActor(ROUTE_ADDRESS, actor_handles, file_name)
-        http_server.run(host = http_host, port = 8000)
+        http_server = HTTPActor(ROUTE_ADDRESS, actor_handles, file_name)
+        http_server.run(host=http_host, port=8000)
         # time.sleep(2)
 
         # # fire client
