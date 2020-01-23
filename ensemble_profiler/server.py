@@ -182,7 +182,7 @@ class HTTPProxy:
             await JSONResponse({"result": result})(scope, receive, send)
 
 
-@ray.remote
+# @ray.remote
 class HTTPActor:
     def __init__(self, address, actor_handles,
                  file_name="/tmp/ensemble_profile.jsonl"):

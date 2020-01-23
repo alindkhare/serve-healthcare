@@ -29,24 +29,26 @@ def profile_ensemble(model_list, file_path, num_patients=1,
                                              pipeline=pipeline)
 
         # start the http server
-        obj_id = nursery_handle.start_actor.remote(HTTPActor,
+        # obj_id = nursery_handle.start_actor.remote(HTTPActor,
                                                    "HEALTH_HTTP_SERVER",
-                                                   init_args=[ROUTE_ADDRESS,
+                                                   init_args = [ROUTE_ADDRESS,
                                                               actor_handles,
                                                               file_name])
-        http_actor_handle = ray.get(obj_id)[0]
-        http_actor_handle.run.remote(host=http_host, port=8000)
+        # http_actor_handle = ray.get(obj_id)[0]
+        # http_actor_handle.run.remote(host=http_host, port=8000)
         # wait for http actor to get started
-        time.sleep(2)
+        http_server=HTTPActor(ROUTE_ADDRESS, actor_handles, file_name)
+        http_server.run(host = http_host, port = 8000)
+        # time.sleep(2)
 
-        # fire client
-        if fire_clients:
-            client_path = os.path.join(package_directory, "patient_client.go")
-            procs = []
-            for patient_name in actor_handles.keys():
-                ls_output = subprocess.Popen(
-                    ["go", "run", client_path, patient_name])
-                procs.append(ls_output)
-            for p in procs:
-                p.wait()
-            serve.shutdown()
+        # # fire client
+        # if fire_clients:
+        #     client_path=os.path.join(package_directory, "patient_client.go")
+        #     procs=[]
+        #     for patient_name in actor_handles.keys():
+        #         ls_output=subprocess.Popen(
+        #             ["go", "run", client_path, patient_name])
+        #         procs.append(ls_output)
+        #     for p in procs:
+        #         p.wait()
+        #     serve.shutdown()
