@@ -42,7 +42,7 @@ def profile_ensemble(model_list, file_path, num_patients=1,
         # http_actor_handle.run.remote(host=http_host, port=8000)
         # wait for http actor to get started
         app = HTTPProxy(ROUTE_ADDRESS, actor_handles, file_name)
-        uvicorn.run("ensemble_profiler:app", host=host, port=port,
+        uvicorn.run("ensemble_profiler:app", host=http_host, port=8000,
                     lifespan="on", access_log=False, workers=4,
                     limit_concurrency=sys.maxsize, reload=False,
                     limit_max_requests=sys.maxsize)
