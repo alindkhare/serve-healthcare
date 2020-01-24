@@ -163,8 +163,8 @@ class HTTPProxy:
         request_sent_time = time.time()
 
         # await for result
-        # result = await handle.get_periodic_predictions.remote(info=info)
-        result = ""
+        result = await handle.get_periodic_predictions.remote(info=info)
+        # result = ""
 
         result_received_time = time.time()
         self.profile_file.write(
@@ -193,4 +193,4 @@ class HTTPActor:
         uvicorn.run(
             self.app, host=host, port=port, lifespan="on", access_log=True,
             limit_concurrency=sys.maxsize, limit_max_requests=sys.maxsize,
-            timeout_keep_alive=300)
+            timeout_keep_alive=5)
