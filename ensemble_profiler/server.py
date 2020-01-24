@@ -163,7 +163,8 @@ class HTTPProxy:
         request_sent_time = time.time()
 
         # await for result
-        result = await handle.get_periodic_predictions.remote(info=info)
+        # result = await handle.get_periodic_predictions.remote(info=info)
+        result = ""
 
         result_received_time = time.time()
         self.profile_file.write(
