@@ -6,7 +6,8 @@ import time
 from ensemble_profiler.server import HTTPActor
 import subprocess
 from ensemble_profiler.constants import ROUTE_ADDRESS
-
+import time
+from threading import Event
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,4 +50,9 @@ def profile_ensemble(model_list, file_path, num_patients=1,
                 procs.append(ls_output)
             for p in procs:
                 p.wait()
+            serve.shutdown()
+        else:
+            # while True:
+            #     time.sleep(1)
+            Event().wait()
             serve.shutdown()
