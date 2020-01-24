@@ -21,12 +21,12 @@ def profile_ensemble(model_list, file_path, num_patients=1,
         file_name = str(file_path.resolve())
 
         # create the pipeline
-        pipeline = create_services(model_list)
+        # pipeline = create_services(model_list)
 
         # create patient handles
         actor_handles = start_patient_actors(num_patients=num_patients,
                                              nursery_handle=nursery_handle,
-                                             pipeline=pipeline)
+                                             pipeline=None)
 
         # start the http server
         obj_id = nursery_handle.start_actor.remote(HTTPActor,

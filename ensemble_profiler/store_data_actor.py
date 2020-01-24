@@ -36,7 +36,8 @@ class StatefulPatientActor:
             # append the data point to the patient's stored data structure
             patient_val_list = self.patient_data[value_type]
             patient_val_list.append(torch.tensor([[value]]))
-            if len(patient_val_list) == self.periodic_interval:
+            if (len(patient_val_list) == self.periodic_interval and
+                    self.pipeline is not None):
                 data = torch.cat(patient_val_list, dim=1)
                 data = torch.stack([data])
                 patient_val_list.clear()
