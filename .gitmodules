@@ -4,4 +4,4 @@
 [submodule "ray"]
 	path = ray
 	url = https://github.com/alindkhare/ray.git
-	branch = serve-health-pipeline-profile
+	branch = serve-health-asyncio
