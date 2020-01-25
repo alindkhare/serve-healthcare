@@ -169,7 +169,8 @@ class HTTPProxy:
         self.profile_file.write(
             json.dumps({
                 "start": request_sent_time,
-                "end": result_received_time
+                "end": result_received_time,
+                "patient_name": info["patient_name"]
             }))
         self.profile_file.write("\n")
         self.profile_file.flush()
