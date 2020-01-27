@@ -8,6 +8,10 @@ import subprocess
 from ensemble_profiler.constants import ROUTE_ADDRESS, PROFILE_ENSEMBLE
 import time
 from threading import Event
+import requests
+import json
+import socket
+import os
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -66,7 +70,26 @@ def profile_ensemble(model_list, file_path, num_patients=1,
                 p.wait()
             serve.shutdown()
         else:
-            # while True:
-            #     time.sleep(1)
-            Event().wait()
+            gw = os.popen("ip -4 route show default").read().split()
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect((gw[2], 0))
+            IPv4addr = s.getsockname()[0]  #for where the server ray.serve() request will be executed
+            serve_port = 8000
+
+            url = "http://130.207.25.143:4000/jsonrpc" #for client address. In the experiment points to pluto
+            print("sending RPC request form IPv4 addr: {}".format(IPv4addr))
+            req_params = {"npatient":num_patients, "serve_ip":IPv4addr, "serve_port":serve_port}
+            fire_remote_clients(url, req_params)
+            print("finish firing remote clients")
             serve.shutdown()
+
+def fire_remote_clients(url, req_params):
+    payload = {
+        "method": "fire_client",
+        "params": req_params,
+        "jsonrpc": "2.0",
+        "id": 0
+    }
+    response = requests.post(url, json=payload).json()
+    print("{}".format(response))
+
