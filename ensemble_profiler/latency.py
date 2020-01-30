@@ -16,29 +16,31 @@ import os
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 
-def profile_ensemble(model_list, file_path, num_patients=100,
-                     http_host="0.0.0.0", fire_clients=True):
+def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
+                     http_host="0.0.0.0", fire_clients=False):
+    
     if not ray.is_initialized():
+        #read constraint
+        num_patients = int(constraint["npatient"])
+        gpu = int(constraint["gpu"])
         serve.init(blocking=True, http_port=5000)
         nursery_handle = start_nursery()
         if not os.path.exists(str(file_path.resolve())):
             file_path.touch()
         file_name = str(file_path.resolve())
-
         # create the pipeline
-        pipeline = create_services(model_list)
-
+        pipeline = create_services(model_list,gpu)
         # create patient handles
         actor_handles = start_patient_actors(num_patients=num_patients,
                                              nursery_handle=nursery_handle,
                                              pipeline=pipeline)
-
         # start the http server
         obj_id = nursery_handle.start_actor.remote(HTTPActor,
                                                    "HEALTH_HTTP_SERVER",
                                                    init_args=[ROUTE_ADDRESS,
                                                               actor_handles,
                                                               file_name])
+
         http_actor_handle = ray.get(obj_id)[0]
         http_actor_handle.run.remote(host=http_host, port=8000)
         # wait for http actor to get started
