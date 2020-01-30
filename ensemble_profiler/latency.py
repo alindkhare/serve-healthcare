@@ -71,17 +71,18 @@ def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
                 p.wait()
             serve.shutdown()
         else:
-            gw = os.popen("ip -4 route show default").read().split()
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect((gw[2], 0))
-            IPv4addr = s.getsockname()[0]  #for where the server ray.serve() request will be executed
-            serve_port = 8000
+            if with_data_collector:
+                gw = os.popen("ip -4 route show default").read().split()
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect((gw[2], 0))
+                IPv4addr = s.getsockname()[0]  #for where the server ray.serve() request will be executed
+                serve_port = 8000
 
-            url = "http://130.207.25.143:4000/jsonrpc" #for client address. In the experiment points to pluto
-            print("sending RPC request form IPv4 addr: {}".format(IPv4addr))
-            req_params = {"npatient":num_patients, "serve_ip":IPv4addr, "serve_port":serve_port}
-            fire_remote_clients(url, req_params)
-            print("finish firing remote clients")
+                url = "http://130.207.25.143:4000/jsonrpc" #for client address. In the experiment points to pluto
+                print("sending RPC request form IPv4 addr: {}".format(IPv4addr))
+                req_params = {"npatient":num_patients, "serve_ip":IPv4addr, "serve_port":serve_port}
+                fire_remote_clients(url, req_params)
+                print("finish firing remote clients")
             serve.shutdown()
 
 def fire_remote_clients(url, req_params):
