@@ -9,7 +9,8 @@ from ensemble_profiler.constants import (MODEL_SERVICE_ECG_PREFIX,
                                          BACKEND_PREFIX,
                                          ROUTE_ADDRESS,
                                          PATIENT_NAME_PREFIX,
-                                         NURSERY_ACTOR)
+                                         NURSERY_ACTOR,
+                                         PREDITICATE_INTERVAL)
 from ensemble_profiler.store_data_actor import StatefulPatientActor
 from ensemble_profiler.patient_prediction import PytorchPredictorECG
 from ensemble_profiler.ensemble_predictions import Aggregate
@@ -56,7 +57,7 @@ def start_nursery():
 
 
 def start_patient_actors(num_patients, pipeline,
-                         nursery_handle, periodic_interval=3750):
+                         nursery_handle, periodic_interval=PREDITICATE_INTERVAL):
     # start actor for collecting patients_data
     actor_handles = {}
     for patient_id in range(num_patients):
