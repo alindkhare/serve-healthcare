@@ -8,6 +8,7 @@ from ray.experimental.async_api import _async_init
 from ray.experimental.serve.constants import (HTTP_ROUTER_CHECKER_INTERVAL_S,
                                               PREDICATE_DEFAULT_VALUE,
                                               SERVE_PROFILE_PATH)
+from ensemble_profiler.constants import PROFILE_ENSEMBLE, PREDITICATE_INTERVAL
 from ray.experimental.serve.context import TaskContext
 from ray.experimental.serve.utils import BytesEncoder
 from urllib.parse import parse_qs
@@ -16,6 +17,7 @@ import os
 from ray import cloudpickle as pickle
 from ray.experimental.serve.http_util import build_flask_request
 import time
+import torch
 
 
 class JSONResponse:
@@ -64,11 +66,13 @@ class HTTPProxy:
     """
 
     def __init__(self, address, actor_handles,
+                 ensemble_pipeline,
                  file_name="/tmp/ensemble_profile.jsonl"):
         assert ray.is_initialized()
         self.route_checker_should_shutdown = False
         self.address = address
         self.actor_handles = actor_handles
+        self.ensemble_pipeline = ensemble_pipeline
         self.profile_file = open(file_name, "w")
 
     async def handle_lifespan_message(self, scope, receive, send):
@@ -94,6 +98,36 @@ class HTTPProxy:
 
         return b"".join(body_buffer)
 
+    async def handle_profile_requests(self, scope, receive, send):
+        # profile_string, service_name = os.path.split(current_path)
+        # http_body_bytes = await self.receive_http_body(scope, receive, send)
+        # flask_request = build_flask_request(scope, http_body_bytes)
+        query_string = scope["query_string"].decode("ascii")
+        query_kwargs = parse_qs(query_string)
+        patient_name = query_kwargs.pop("patient_name", None)
+        if patient_name is None:
+            raise ValueError("Specify patient_name in query")
+        if len(patient_name) != 1:
+            raise ValueError("Multiple Patients specified."
+                             "Specify only one.")
+        patient_name = patient_name[0]
+        prediction_tensor = torch.zeros((1, 1, PREDITICATE_INTERVAL))
+
+        request_sent_time = time.time()
+        result = await self.ensemble_pipeline.remote(data=prediction_tensor)
+        result_received_time = time.time()
+
+        self.profile_file.write(
+            json.dumps({
+                "start": request_sent_time,
+                "end": result_received_time,
+                "patient_name": patient_name
+            }))
+        self.profile_file.write("\n")
+        self.profile_file.flush()
+
+        return result
+
     async def __call__(self, scope, receive, send):
         # NOTE: This implements ASGI protocol specified in
         #       https://asgi.readthedocs.io/en/latest/specs/index.html
@@ -108,8 +142,15 @@ class HTTPProxy:
             await JSONResponse({"supported path": self.address})(scope,
                                                                  receive, send)
             return
+        if current_path == PROFILE_ENSEMBLE:
+            try:
+                result = await self.handle_profile_requests(scope, send,
+                                                            receive)
+                await JSONResponse({"result": result})(scope, receive, send)
+            except ValueError as e:
+                await JSONResponse({"error": str(e)})(scope, receive, send)
+            return
 
-        # TODO(simon): Use werkzeug route mapper to support variable path
         if current_path != self.address:
             error_message = ("Path {} not found. "
                              "Please ping http://.../ for routing table"
@@ -185,9 +226,10 @@ class HTTPProxy:
 
 @ray.remote
 class HTTPActor:
-    def __init__(self, address, actor_handles,
+    def __init__(self, address, actor_handles, ensemble_pipeline,
                  file_name="/tmp/ensemble_profile.jsonl"):
-        self.app = HTTPProxy(address, actor_handles, file_name)
+        self.app = HTTPProxy(address, actor_handles, ensemble_pipeline,
+                             file_name)
 
     def run(self, host="0.0.0.0", port=5000):
         uvicorn.run(
