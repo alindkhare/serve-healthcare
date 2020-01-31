@@ -32,6 +32,8 @@ def get_accuracy_profile(V, b, debug=False):
     """
     if debug:
         return np.random.rand()
+    if np.sum(b) == 0:
+        return np.nan
     auc = evaluate_ensemble_models(b, num_record_eval=100, debug=True)
     return auc
 
@@ -41,6 +43,8 @@ def get_latency_profile(V, c, b, debug=False):
     """
     if debug:
         return 1e-3*np.random.rand(100)
+    if np.sum(b) == 0:
+        return np.nan
     v = V[np.array(b, dtype=bool)]
     print(V.shape, v.shape, b)
     model_list = []
@@ -54,7 +58,7 @@ def get_latency_profile(V, c, b, debug=False):
     file_path = Path(filename)
     system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
     print(system_constraint)
-    profiler.profile_ensemble(model_list,file_path,system_constraint)
+    profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
 
     input_file = filename
     json_list = []
@@ -72,3 +76,10 @@ def get_latency_profile(V, c, b, debug=False):
 
     return latency
 
+if __name__ == "__main__":
+
+    for i in range(20):
+        b = [0] * 20
+        b[i] = 1
+        auc = evaluate_ensemble_models(b, num_record_eval=100, debug=False)
+        print(auc)

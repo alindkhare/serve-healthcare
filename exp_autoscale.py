@@ -7,14 +7,7 @@ from tqdm import tqdm
 
 from util import my_eval, get_accuracy_profile, get_latency_profile
 
-def get_description(n_gpu, n_patients):
-    """
-    return V and c
-
-    V: base_filters, n_block, accuracy, latency
-    c: n_gpu, n_patients
-    """
-
+def write_description():
     base_filters_list = [8, 16, 32, 64, 128]
     n_block_list = [2, 4, 8, 16]
     n_fields = 3
@@ -22,14 +15,23 @@ def get_description(n_gpu, n_patients):
     V = []
     for base_filters in base_filters_list:
         for n_block in n_block_list:
-            accuracy = np.random.rand()
-            latency = 1e-4*np.random.rand()
-            tmp = [base_filters, n_block, accuracy, latency]
+            accuracy = 0.5
+            flops = 1e5
+            size = 1e5
+            tmp = [base_filters, n_block, accuracy, flops, size]
             V.append(tmp)
-    V = np.array(V)
+    V = pd.DataFrame(V, columns=['model', 'n_filters', 'n_blocks'])
 
-    n_gpu = n_gpu
-    n_patients = n_patients
+def get_description(n_gpu, n_patients):
+    """
+    return V and c
+
+    V: base_filters, n_block, accuracy, flops, size
+    c: n_gpu, n_patients
+    """
+
+    df = pd.read_csv('model_list_small.csv')
+    V = df.iloc[:16, 1:].values
     c = np.array([n_gpu, n_patients])
 
     return V, c
@@ -107,8 +109,21 @@ def solve_random(V, c, L, lamda):
         latency = np.percentile(tmp_latency, 95)
         print(tmp_idx, b, latency)
         if latency >= L:
+            b[tmp_idx] = 0
             break
-    print('found best b is: {}'.format(b))
+
+    opt_b = b
+    opt_accuracy = get_accuracy_profile(V, opt_b)
+    tmp_latency = get_latency_profile(V, c, opt_b)
+    opt_latency = np.percentile(tmp_latency, 95)
+
+    print('finish solve_random')
+    print('found best b is: ', opt_b)
+    print('the accuracy is: ', opt_accuracy)
+    print('the p95 latency is: ', opt_latency)
+    with open(log_name, 'a') as fout:
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+
     return b
 
 def solve_greedy_accuracy(V, c, L, lamda):
@@ -126,8 +141,22 @@ def solve_greedy_accuracy(V, c, L, lamda):
         latency = np.percentile(tmp_latency, 95)
         print(tmp_idx, b, latency)
         if latency >= L:
+            b[tmp_idx] = 0
             break
     print('found best b is: {}'.format(b))
+
+    opt_b = b
+    opt_accuracy = get_accuracy_profile(V, opt_b)
+    tmp_latency = get_latency_profile(V, c, opt_b)
+    opt_latency = np.percentile(tmp_latency, 95)
+
+    print('finish solve_random')
+    print('found best b is: ', opt_b)
+    print('the accuracy is: ', opt_accuracy)
+    print('the p95 latency is: ', opt_latency)
+    with open(log_name, 'a') as fout:
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+
     return b
 
 def solve_greedy_latency(V, c, L, lamda):
@@ -145,8 +174,22 @@ def solve_greedy_latency(V, c, L, lamda):
         latency = np.percentile(tmp_latency, 95)
         print(tmp_idx, b, latency)
         if latency >= L:
+            b[tmp_idx] = 0
             break
     print('found best b is: {}'.format(b))
+
+    opt_b = b
+    opt_accuracy = get_accuracy_profile(V, opt_b)
+    tmp_latency = get_latency_profile(V, c, opt_b)
+    opt_latency = np.percentile(tmp_latency, 95)
+
+    print('finish solve_random')
+    print('found best b is: ', opt_b)
+    print('the accuracy is: ', opt_accuracy)
+    print('the p95 latency is: ', opt_latency)
+    with open(log_name, 'a') as fout:
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+
     return b
 
 ##################################################################################################
@@ -155,7 +198,7 @@ def solve_greedy_latency(V, c, L, lamda):
 def solve_opt_passive(V, c, L, lamda):
     # --------------------- hyper parameters ---------------------
     
-    N1 = 100 # warm start
+    N1 = 10 # warm start
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -181,7 +224,18 @@ def solve_opt_passive(V, c, L, lamda):
         all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L))
     opt_idx = np.argmax(all_obj)
     opt_b = B[opt_idx]
-    print('found best b is: {}'.format(opt_b))
+
+    opt_accuracy = get_accuracy_profile(V, opt_b)
+    tmp_latency = get_latency_profile(V, c, opt_b)
+    opt_latency = np.percentile(tmp_latency, 95)
+
+    print('finish solve_random')
+    print('found best b is: ', opt_b)
+    print('the accuracy is: ', opt_accuracy)
+    print('the p95 latency is: ', opt_latency)
+    with open(log_name, 'a') as fout:
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+
     return opt_b
 
 def solve_opt_active(V, c, L, lamda):
@@ -240,7 +294,18 @@ def solve_opt_active(V, c, L, lamda):
         all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L))
     opt_idx = np.argmax(all_obj)
     opt_b = B[opt_idx]
-    print('found best b is: {}'.format(opt_b))
+
+    opt_accuracy = get_accuracy_profile(V, opt_b)
+    tmp_latency = get_latency_profile(V, c, opt_b)
+    opt_latency = np.percentile(tmp_latency, 95)
+
+    print('finish solve_random')
+    print('found best b is: ', opt_b)
+    print('the accuracy is: ', opt_accuracy)
+    print('the p95 latency is: ', opt_latency)
+    with open(log_name, 'a') as fout:
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+
     return opt_b
 
 ##################################################################################################
@@ -318,23 +383,52 @@ def solve_proxy(V, c, L, lamda):
         all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L))
     opt_idx = np.argmax(all_obj)
     opt_b = B[opt_idx]
-    print('found best b is: {}'.format(opt_b))
+
+    opt_accuracy = get_accuracy_profile(V, opt_b)
+    tmp_latency = get_latency_profile(V, c, opt_b)
+    opt_latency = np.percentile(tmp_latency, 95)
+
+    print('finish solve_random')
+    print('found best b is: ', opt_b)
+    print('the accuracy is: ', opt_accuracy)
+    print('the p95 latency is: ', opt_latency)
+    with open(log_name, 'a') as fout:
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+
     return opt_b
 
 if __name__ == "__main__":
-    
-    L = 0.1 # maximum latency
+
+    L = 1.0 # maximum latency
     lamda = 10
-    V, c = get_description(n_gpu=4, n_patients=1)
+    n_patients_list = [1,2,5,10,20,50,100]
+    
+    # for n_patients in n_patients_list:
+
+    #     V, c = get_description(n_gpu=1, n_patients=n_patients)
+    #     print(V, c)
+    #     log_name = 'log_naive.txt'
+
+    #     # ---------- naive solutions ----------
+    #     opt_b = solve_random(V, c, L, lamda)
+    #     opt_b = solve_greedy_accuracy(V, c, L, lamda)
+    #     opt_b = solve_greedy_latency(V, c, L, lamda)
+
+
+    V, c = get_description(n_gpu=1, n_patients=1)
+    print(V, c)
+    log_name = 'log.txt'
 
     # ---------- naive solutions ----------
-    solve_random(V, c, L, lamda)
-    # solve_greedy_accuracy(V, c, L, lamda)
-    # solve_greedy_latency(V, c, L, lamda)
+    opt_b = solve_random(V, c, L, lamda)
+    opt_b = solve_greedy_accuracy(V, c, L, lamda)
+    opt_b = solve_greedy_latency(V, c, L, lamda)
 
     # # ---------- opt solutions ----------
-    # solve_opt_passive(V, c, L, lamda)
-    # solve_opt_active(V, c, L, lamda)
+    opt_b = solve_opt_passive(V, c, L, lamda)
+    opt_b = solve_opt_active(V, c, L, lamda)
 
     # # ---------- proxy solutions ----------
-    # solve_proxy(V, c, L, lamda)
+    opt_b = solve_proxy(V, c, L, lamda)
+
+

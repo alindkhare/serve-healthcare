@@ -56,5 +56,6 @@ def evaluate_ensemble_models(b, num_record_eval = 100, debug=False):
         
     return roc_auc_score(y_true, y_scores)
     
-auc = evaluate_ensemble_models(b = np.ones(12), num_record_eval = 100, debug=True)
-print(auc)
+if __name__ == "__main__":
+    auc = evaluate_ensemble_models(b = np.ones(12), num_record_eval = 100, debug=True)
+    print(auc)
