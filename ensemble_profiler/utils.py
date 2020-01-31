@@ -51,7 +51,7 @@ def create_services(model_list,gpu):
         service_handles[service] = serve.get_handle(service)
 
     pipeline = EnsemblePipeline(model_services, service_handles)
-    return pipeline
+    return pipeline, service_handles
 
 
 def start_nursery():
