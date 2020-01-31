@@ -19,7 +19,7 @@ import time
 from ensemble_profiler.nursery import PatientActorNursery
 
 
-def create_services(model_list):
+def create_services(model_list,gpu):
     all_services = []
     # create relevant services
     model_services = []
@@ -30,9 +30,13 @@ def create_services(model_list):
     all_services += model_services
     serve.create_endpoint(AGGREGATE_PREDICTIONS)
     all_services.append(AGGREGATE_PREDICTIONS)
-
-    for service, model in zip(model_services, model_list):
-        b_config = BackendConfig(num_replicas=1, num_gpus=1)
+    nmodel = len(model_list)
+    if nmodel % gpu == 0:
+        gpu_fraction = gpu / len(model_list)
+    else:
+        gpu_fraction = gpu / (nmodel+1)
+    for service, model in zip(model_services, model_list): 
+        b_config = BackendConfig(num_replicas=1, num_gpus=gpu_fraction)
         serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
                              model, True, backend_config=b_config)
     serve.create_backend(Aggregate, BACKEND_PREFIX+AGGREGATE_PREDICTIONS)
@@ -47,7 +51,7 @@ def create_services(model_list):
         service_handles[service] = serve.get_handle(service)
 
     pipeline = EnsemblePipeline(model_services, service_handles)
-    return pipeline
+    return pipeline, service_handles
 
 
 def start_nursery():
