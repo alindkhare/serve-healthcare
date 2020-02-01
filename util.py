@@ -34,7 +34,7 @@ def get_accuracy_profile(V, b, debug=False):
         return np.random.rand()
     if np.sum(b) == 0:
         return np.nan
-    auc = evaluate_ensemble_models(b, num_record_eval=100, debug=True)
+    auc = evaluate_ensemble_models(b, num_record_eval=100, debug=False)
     return auc
 
 

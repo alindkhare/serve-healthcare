@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestRegressor as RF
 import pickle
 import random
 from tqdm import tqdm
+from datetime import datetime
 
 from util import my_eval, get_accuracy_profile, get_latency_profile
 
@@ -83,11 +84,17 @@ def nearby_sample(n_model, B_top, B, n_samples, dist=3):
         i += 1
     return out
 
-def get_obj(accuracy, latency, lamda, L):
-    return accuracy + lamda * (L - latency)
+def get_obj(accuracy, latency, lamda, L, soft=True):
+    if soft:
+        return accuracy + lamda * (L - latency)
+    else:
+        if latency > L:
+            return 0.0
+        else:
+            return accuracy
 
 def save_checkpoint(res):
-    with open('res.pkl','wb') as fout:
+    with open('res1.pkl','wb') as fout:
         pickle.dump(res, fout)
 
 ##################################################################################################
@@ -97,6 +104,8 @@ def solve_random(V, c, L, lamda):
     """
     random incremental
     """
+    print("="*60)
+    print("start solve_random")
     n_model = V.shape[0]
     b = np.zeros(n_model)
     idx_all = list(range(n_model))
@@ -130,6 +139,8 @@ def solve_greedy_accuracy(V, c, L, lamda):
     """
     greedy accuracy incremental
     """
+    print("="*60)
+    print("start solve_greedy_accuracy")
     n_model = V.shape[0]
     b = np.zeros(n_model)
     idx_order = np.argsort(V[:, 2])[::-1] # the 3rd col is accuracy
@@ -150,12 +161,12 @@ def solve_greedy_accuracy(V, c, L, lamda):
     tmp_latency = get_latency_profile(V, c, opt_b)
     opt_latency = np.percentile(tmp_latency, 95)
 
-    print('finish solve_random')
+    print('finish solve_greedy_accuracy')
     print('found best b is: ', opt_b)
     print('the accuracy is: ', opt_accuracy)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_greedy_accuracy', opt_accuracy, opt_latency, opt_b))
 
     return b
 
@@ -163,6 +174,8 @@ def solve_greedy_latency(V, c, L, lamda):
     """
     greedy latency incremental
     """
+    print("="*60)
+    print("start solve_greedy_latency")
     n_model = V.shape[0]
     b = np.zeros(n_model)
     idx_order = np.argsort(V[:, 3]) # the 4th col is latency
@@ -183,12 +196,12 @@ def solve_greedy_latency(V, c, L, lamda):
     tmp_latency = get_latency_profile(V, c, opt_b)
     opt_latency = np.percentile(tmp_latency, 95)
 
-    print('finish solve_random')
+    print('finish solve_greedy_latency')
     print('found best b is: ', opt_b)
     print('the accuracy is: ', opt_accuracy)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_greedy_latency', opt_accuracy, opt_latency, opt_b))
 
     return b
 
@@ -196,6 +209,9 @@ def solve_greedy_latency(V, c, L, lamda):
 # opt
 ##################################################################################################
 def solve_opt_passive(V, c, L, lamda):
+
+    print("="*60)
+    print("start solve_opt_passive")
     # --------------------- hyper parameters ---------------------
     
     N1 = 10 # warm start
@@ -229,16 +245,19 @@ def solve_opt_passive(V, c, L, lamda):
     tmp_latency = get_latency_profile(V, c, opt_b)
     opt_latency = np.percentile(tmp_latency, 95)
 
-    print('finish solve_random')
+    print('finish solve_opt_passive')
     print('found best b is: ', opt_b)
     print('the accuracy is: ', opt_accuracy)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_opt_passive', opt_accuracy, opt_latency, opt_b))
 
     return opt_b
 
 def solve_opt_active(V, c, L, lamda):
+
+    print("="*60)
+    print("start solve_opt_active")
     # --------------------- hyper parameters ---------------------
     
     N1 = 10 # warm start
@@ -299,12 +318,12 @@ def solve_opt_active(V, c, L, lamda):
     tmp_latency = get_latency_profile(V, c, opt_b)
     opt_latency = np.percentile(tmp_latency, 95)
 
-    print('finish solve_random')
+    print('finish solve_opt_active')
     print('found best b is: ', opt_b)
     print('the accuracy is: ', opt_accuracy)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_opt_active', opt_accuracy, opt_latency, opt_b))
 
     return opt_b
 
@@ -312,6 +331,9 @@ def solve_opt_active(V, c, L, lamda):
 # proxy
 ##################################################################################################
 def solve_proxy(V, c, L, lamda):
+
+    print("="*60)
+    print("start solve_proxy")
     # --------------------- hyper parameters ---------------------
     
     N1 = 10 # warm start
@@ -388,47 +410,45 @@ def solve_proxy(V, c, L, lamda):
     tmp_latency = get_latency_profile(V, c, opt_b)
     opt_latency = np.percentile(tmp_latency, 95)
 
-    print('finish solve_random')
+    print('finish solve_proxy')
     print('found best b is: ', opt_b)
     print('the accuracy is: ', opt_accuracy)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_proxy', opt_accuracy, opt_latency, opt_b))
 
     return opt_b
 
 if __name__ == "__main__":
 
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     L = 1.0 # maximum latency
-    lamda = 10
+    lamda = 2
     n_patients_list = [1,2,5,10,20,50,100]
     
-    # for n_patients in n_patients_list:
+    log_name = 'log2.txt'
+    with open(log_name, 'w') as fout:
+        fout.write(current_time+'\n')
+    
+    for n_patients in n_patients_list:
 
-    #     V, c = get_description(n_gpu=1, n_patients=n_patients)
-    #     print(V, c)
-    #     log_name = 'log_naive.txt'
+        with open(log_name, 'a') as fout:
+            fout.write(current_time)
 
-    #     # ---------- naive solutions ----------
-    #     opt_b = solve_random(V, c, L, lamda)
-    #     opt_b = solve_greedy_accuracy(V, c, L, lamda)
-    #     opt_b = solve_greedy_latency(V, c, L, lamda)
+        V, c = get_description(n_gpu=1, n_patients=n_patients)
+        print(V, c)
 
+        # ---------- naive solutions ----------
+        opt_b = solve_random(V, c, L, lamda)
+        opt_b = solve_greedy_accuracy(V, c, L, lamda)
+        opt_b = solve_greedy_latency(V, c, L, lamda)
 
-    V, c = get_description(n_gpu=1, n_patients=1)
-    print(V, c)
-    log_name = 'log.txt'
+        # # ---------- opt solutions ----------
+        opt_b = solve_opt_passive(V, c, L, lamda)
+        opt_b = solve_opt_active(V, c, L, lamda)
 
-    # ---------- naive solutions ----------
-    opt_b = solve_random(V, c, L, lamda)
-    opt_b = solve_greedy_accuracy(V, c, L, lamda)
-    opt_b = solve_greedy_latency(V, c, L, lamda)
-
-    # # ---------- opt solutions ----------
-    opt_b = solve_opt_passive(V, c, L, lamda)
-    opt_b = solve_opt_active(V, c, L, lamda)
-
-    # # ---------- proxy solutions ----------
-    opt_b = solve_proxy(V, c, L, lamda)
+        # # ---------- proxy solutions ----------
+        opt_b = solve_proxy(V, c, L, lamda)
 
 
