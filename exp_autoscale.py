@@ -6,7 +6,7 @@ import random
 from tqdm import tqdm
 from datetime import datetime
 
-from util import my_eval, get_accuracy_profile, get_latency_profile
+from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache
 
 def write_description():
     base_filters_list = [8, 16, 32, 64, 128]
@@ -32,7 +32,7 @@ def get_description(n_gpu, n_patients):
     """
 
     df = pd.read_csv('model_list_small.csv')
-    V = df.iloc[:16, 1:].values
+    V = df.iloc[:, 1:].values
     c = np.array([n_gpu, n_patients])
 
     return V, c
@@ -114,24 +114,24 @@ def solve_random(V, c, L, lamda):
         tmp_idx = np.random.choice(idx_all)
         idx_all.remove(tmp_idx)
         b[tmp_idx] = 1
-        tmp_latency = get_latency_profile(V, c, b)
+        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         latency = np.percentile(tmp_latency, 95)
-        print(tmp_idx, b, latency)
+        print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
             break
 
     opt_b = b
-    opt_accuracy = get_accuracy_profile(V, opt_b)
-    tmp_latency = get_latency_profile(V, c, opt_b)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
+    tmp_latency = get_latency_profile(V, c, opt_b, cache=cache_latency)
     opt_latency = np.percentile(tmp_latency, 95)
 
     print('finish solve_random')
     print('found best b is: ', opt_b)
-    print('the accuracy is: ', opt_accuracy)
+    print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_random', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return b
 
@@ -148,25 +148,25 @@ def solve_greedy_accuracy(V, c, L, lamda):
     for i in range(n_model):
         tmp_idx = idx_order[i]
         b[tmp_idx] = 1
-        tmp_latency = get_latency_profile(V, c, b)
+        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         latency = np.percentile(tmp_latency, 95)
-        print(tmp_idx, b, latency)
+        print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
             break
     print('found best b is: {}'.format(b))
 
     opt_b = b
-    opt_accuracy = get_accuracy_profile(V, opt_b)
-    tmp_latency = get_latency_profile(V, c, opt_b)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
+    tmp_latency = get_latency_profile(V, c, opt_b, cache=cache_latency)
     opt_latency = np.percentile(tmp_latency, 95)
 
     print('finish solve_greedy_accuracy')
     print('found best b is: ', opt_b)
-    print('the accuracy is: ', opt_accuracy)
+    print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_greedy_accuracy', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return b
 
@@ -183,25 +183,25 @@ def solve_greedy_latency(V, c, L, lamda):
     for i in range(n_model):
         tmp_idx = idx_order[i]
         b[tmp_idx] = 1
-        tmp_latency = get_latency_profile(V, c, b)
+        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         latency = np.percentile(tmp_latency, 95)
-        print(tmp_idx, b, latency)
+        print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
             break
     print('found best b is: {}'.format(b))
 
     opt_b = b
-    opt_accuracy = get_accuracy_profile(V, opt_b)
-    tmp_latency = get_latency_profile(V, c, opt_b)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
+    tmp_latency = get_latency_profile(V, c, opt_b, cache=cache_latency)
     opt_latency = np.percentile(tmp_latency, 95)
 
     print('finish solve_greedy_latency')
     print('found best b is: ', opt_b)
-    print('the accuracy is: ', opt_accuracy)
+    print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_greedy_latency', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return b
 
@@ -214,7 +214,10 @@ def solve_opt_passive(V, c, L, lamda):
     print("start solve_opt_passive")
     # --------------------- hyper parameters ---------------------
     
-    N1 = 10 # warm start
+    if global_debug:
+        N1 = 3
+    else:
+        N1 = 30 # warm start
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -229,7 +232,7 @@ def solve_opt_passive(V, c, L, lamda):
     # profile
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b))
-        tmp_latency = get_latency_profile(V, c, b)
+        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         all_latency.append(tmp_latency)
         Y_latency.append(np.percentile(tmp_latency, 95))
         save_checkpoint(res)
@@ -237,20 +240,20 @@ def solve_opt_passive(V, c, L, lamda):
     # --------------------- (3) solve ---------------------
     all_obj = []
     for i in range(len(B)):
-        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L))
+        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
     opt_idx = np.argmax(all_obj)
     opt_b = B[opt_idx]
 
-    opt_accuracy = get_accuracy_profile(V, opt_b)
-    tmp_latency = get_latency_profile(V, c, opt_b)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
+    tmp_latency = get_latency_profile(V, c, opt_b, cache=cache_latency)
     opt_latency = np.percentile(tmp_latency, 95)
 
     print('finish solve_opt_passive')
     print('found best b is: ', opt_b)
-    print('the accuracy is: ', opt_accuracy)
+    print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_opt_passive', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return opt_b
 
@@ -260,10 +263,16 @@ def solve_opt_active(V, c, L, lamda):
     print("start solve_opt_active")
     # --------------------- hyper parameters ---------------------
     
-    N1 = 10 # warm start
-    topK = 3 # search near top
-    N3 = 10 # profile
-    epoches = 10
+    if global_debug:
+        N1 = 3 # warm start
+        topK = 3 # search near top
+        N3 = 3 # profile
+        epoches = 1
+    else:
+        N1 = 30 # warm start
+        topK = 3 # search near top
+        N3 = 30 # profile
+        epoches = 10
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -279,11 +288,11 @@ def solve_opt_active(V, c, L, lamda):
     all_obj = []
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b))
-        tmp_latency = get_latency_profile(V, c, b)
+        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         all_latency.append(tmp_latency)
         Y_latency.append(np.percentile(tmp_latency, 95))
         save_checkpoint(res)
-        all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L))
+        all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L, soft=False))
 
     # --------------------- (2) choose B ---------------------
     for i_epoches in tqdm(range(epoches)):
@@ -298,11 +307,11 @@ def solve_opt_active(V, c, L, lamda):
             # get_accuracy_profile
             Y_accuracy.append(get_accuracy_profile(V, b))
             # get_latency_profile
-            tmp_latency = get_latency_profile(V, c, b)
+            tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
             all_latency.append(tmp_latency)
             Y_latency.append(np.percentile(tmp_latency, 95))
             save_checkpoint(res)
-            all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L))
+            all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L, soft=False))
 
         B = B + B_0
         print(np.array(B).shape)
@@ -310,20 +319,20 @@ def solve_opt_active(V, c, L, lamda):
     # --------------------- (3) solve ---------------------
     all_obj = []
     for i in range(len(B)):
-        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L))
+        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
     opt_idx = np.argmax(all_obj)
     opt_b = B[opt_idx]
 
-    opt_accuracy = get_accuracy_profile(V, opt_b)
-    tmp_latency = get_latency_profile(V, c, opt_b)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
+    tmp_latency = get_latency_profile(V, c, opt_b, cache=cache_latency)
     opt_latency = np.percentile(tmp_latency, 95)
 
     print('finish solve_opt_active')
     print('found best b is: ', opt_b)
-    print('the accuracy is: ', opt_accuracy)
+    print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_opt_active', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return opt_b
 
@@ -336,10 +345,16 @@ def solve_proxy(V, c, L, lamda):
     print("start solve_proxy")
     # --------------------- hyper parameters ---------------------
     
-    N1 = 10 # warm start
-    N2 = 1000 # proxy
-    N3 = 10 # profile
-    epoches = 10
+    if global_debug:
+        N1 = 3 # warm start
+        N2 = 1000 # proxy
+        N3 = 3 # profile
+        epoches = 1
+    else:
+        N1 = 10 # warm start
+        N2 = 1000 # proxy
+        N3 = 10 # profile
+        epoches = 10
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -357,7 +372,7 @@ def solve_proxy(V, c, L, lamda):
     # profile
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b))
-        tmp_latency = get_latency_profile(V, c, b)
+        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         all_latency.append(tmp_latency)
         Y_latency.append(np.percentile(tmp_latency, 95))
         save_checkpoint(res)
@@ -382,7 +397,7 @@ def solve_proxy(V, c, L, lamda):
         pred_latency = latency_predictor.predict(B_bar)
         all_obj = []
         for i in range(len(B_bar)):
-            all_obj.append(get_obj(pred_accuracy[i], pred_latency[i], lamda, L))
+            all_obj.append(get_obj(pred_accuracy[i], pred_latency[i], lamda, L, soft=False))
         top_idx = np.argsort(all_obj)[::-1][:N3]
         B_0 = list(np.array(B_bar)[top_idx])
 
@@ -391,7 +406,7 @@ def solve_proxy(V, c, L, lamda):
             # get_accuracy_profile
             Y_accuracy.append(get_accuracy_profile(V, b))
             # get_latency_profile
-            tmp_latency = get_latency_profile(V, c, b)
+            tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
             all_latency.append(tmp_latency)
             Y_latency.append(np.percentile(tmp_latency, 95))
             save_checkpoint(res)
@@ -402,42 +417,41 @@ def solve_proxy(V, c, L, lamda):
     # --------------------- (3) solve ---------------------
     all_obj = []
     for i in range(len(B)):
-        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L))
+        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
     opt_idx = np.argmax(all_obj)
     opt_b = B[opt_idx]
 
-    opt_accuracy = get_accuracy_profile(V, opt_b)
-    tmp_latency = get_latency_profile(V, c, opt_b)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
+    tmp_latency = get_latency_profile(V, c, opt_b, cache=cache_latency)
     opt_latency = np.percentile(tmp_latency, 95)
 
     print('finish solve_proxy')
     print('found best b is: ', opt_b)
-    print('the accuracy is: ', opt_accuracy)
+    print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{},{},{}\n'.format(c[0], c[1], 'solve_proxy', opt_accuracy, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return opt_b
 
 if __name__ == "__main__":
 
+    global_debug = True
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cache_latency = read_cache()
 
-    L = 1.0 # maximum latency
-    lamda = 2
-    n_patients_list = [1,2,5,10,20,50,100]
+    L = 1.5 # maximum latency
+    lamda = 1
+    n_patients_list = [1] # [1,2,5,10,20,50,100]
     
-    log_name = 'log2.txt'
+    log_name = 'log.txt'
     with open(log_name, 'w') as fout:
         fout.write(current_time+'\n')
     
     for n_patients in n_patients_list:
 
-        with open(log_name, 'a') as fout:
-            fout.write(current_time)
-
         V, c = get_description(n_gpu=1, n_patients=n_patients)
-        print(V, c)
+        print('model description:', V, '\nsystem description:', c)
 
         # ---------- naive solutions ----------
         opt_b = solve_random(V, c, L, lamda)
