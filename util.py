@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestRegressor as RF
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 def get_model(base_filters, n_block):
     model = ResNet1D(in_channels=1,
@@ -117,6 +118,20 @@ def read_cache():
             cache_latency.append([b, np.percentile(latency, 95), latency])
     return cache_latency
 
+def get_description(n_gpu, n_patients):
+    """
+    return V and c
+
+    V: base_filters, n_block, accuracy, flops, size
+    c: n_gpu, n_patients
+    """
+
+    df = pd.read_csv('model_list_small.csv')
+    V = df.iloc[:, 1:].values
+    c = np.array([n_gpu, n_patients])
+
+    return V, c
+
 def test_fit_latency():
 
     cache_latency = read_cache()
@@ -147,6 +162,28 @@ def test_fit_latency():
     plt.tight_layout()
     plt.savefig('img/cor_latency.png')
 
+def plot_accuracy_latency():
+
+    V, c = get_description(n_gpu=1, n_patients=1)
+    cache_latency = read_cache()
+    B = []
+    latency = []
+    accuracy = []
+    step = 0
+    for i in tqdm(cache_latency):
+        step += 1
+        B.append(i[0])
+        latency.append(i[1])
+        accuracy.append(get_accuracy_profile(V, i[0]))
+
+        if step % 100 == 0:
+            plt.figure(figsize=(4,3))
+            plt.scatter(accuracy, latency, c='tab:grey', s=2)
+            plt.xlabel('Accuracy')
+            plt.ylabel('Latency')
+            plt.tight_layout()
+            plt.savefig('img/accuracy_2_latency.png')
+
 
 if __name__ == "__main__":
 
@@ -157,5 +194,5 @@ if __name__ == "__main__":
     #     for line in fin:
     #         fout.write(line[:79]+', 0.0, 0.0, 0.0, 0.0'+line[79:])
 
-    pass
+    plot_accuracy_latency()
             
