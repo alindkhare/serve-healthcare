@@ -222,7 +222,7 @@ def solve_opt_passive(V, c, L, lamda):
     if global_debug:
         N1 = 1
     else:
-        N1 = 30 # warm start
+        N1 = 100 # warm start
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -245,9 +245,7 @@ def solve_opt_passive(V, c, L, lamda):
     res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency, 'all_latency':all_latency}
 
     # --------------------- (1) warm start ---------------------
-    print(B)
     B = B + random_sample(n_model=n_model, B=B, n_samples=N1)
-    print(B)
     # profile
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b))
@@ -294,7 +292,7 @@ def solve_opt_active(V, c, L, lamda):
         N3 = 1 # profile
         epoches = 1
     else:
-        N1 = 30 # warm start
+        N1 = 100 # warm start
         topK = 3 # search near top
         N3 = 30 # profile
         epoches = 10
@@ -392,9 +390,9 @@ def solve_proxy(V, c, L, lamda):
         N3 = 1 # profile
         epoches = 1
     else:
-        N1 = 10 # warm start
+        N1 = 100 # warm start
         N2 = 1000 # proxy
-        N3 = 10 # profile
+        N3 = 30 # profile
         epoches = 10
 
     # --------------------- initialization ---------------------
@@ -490,7 +488,7 @@ def solve_proxy(V, c, L, lamda):
 
 if __name__ == "__main__":
 
-    global_debug = True
+    global_debug = False
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cache_latency = read_cache()
 
@@ -515,11 +513,11 @@ if __name__ == "__main__":
         opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
         opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
 
-        # # ---------- opt solutions ----------
+        # ---------- opt solutions ----------
         opt_b_solve_opt_passive = solve_opt_passive(V, c, L, lamda)
         opt_b_solve_opt_active = solve_opt_active(V, c, L, lamda)
 
-        # # ---------- proxy solutions ----------
+        # ---------- proxy solutions ----------
         opt_b_solve_proxy = solve_proxy(V, c, L, lamda)
 
 

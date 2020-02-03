@@ -39,16 +39,21 @@ def get_accuracy_profile(V, b, return_all=False):
 
     if return_all:
         if np.sum(b) == 0:
-            return np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan
+            return 0,0,0,0,0,0,0,0,0,0
         else:
             roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_per_patient(b)
             return roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std
     else:
         if np.sum(b) == 0:
-            return np.nan
+            return 0
         else:
-            roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_per_patient(b)
-            return roc_auc
+            try:
+                roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_per_patient(b)
+                return roc_auc
+            except:
+                print(b)
+                return 0
+            
 
 
 def get_latency_profile(V, c, b, cache, debug=False):
@@ -59,7 +64,7 @@ def get_latency_profile(V, c, b, cache, debug=False):
     if debug:
         return 1e-3*np.random.rand(100)
     if np.sum(b) == 0:
-        return np.nan
+        return 1e6
 
     for i in cache:
         if dist(b, i[0]) == 0:
