@@ -54,8 +54,6 @@ def get_accuracy_profile(V, b, return_all=False):
             except:
                 print(b)
                 return 0
-            
-
 
 def get_latency_profile(V, c, b, cache, debug=False):
     """
@@ -118,6 +116,23 @@ def read_cache():
             cache_latency.append([b, np.percentile(latency, 95), latency])
     return cache_latency
 
+
+
+def write_description():
+    base_filters_list = [8, 16, 32, 64, 128]
+    n_block_list = [2, 4, 8, 16]
+    n_fields = 3
+    n_model = len(base_filters_list) * len(n_block_list)
+    V = []
+    for base_filters in base_filters_list:
+        for n_block in n_block_list:
+            accuracy = 0.5
+            flops = 1e5
+            size = 1e5
+            tmp = [base_filters, n_block, accuracy, flops, size]
+            V.append(tmp)
+    V = pd.DataFrame(V, columns=['model', 'n_filters', 'n_blocks'])
+
 def get_description(n_gpu, n_patients):
     """
     return V and c
@@ -132,8 +147,11 @@ def get_description(n_gpu, n_patients):
 
     return V, c
 
+# ------------------------------------------------------------------------------------------------
 def test_fit_latency():
-
+    """
+    experiment to see latency proxy
+    """
     cache_latency = read_cache()
     B = []
     latency = []
@@ -163,7 +181,9 @@ def test_fit_latency():
     plt.savefig('img/cor_latency.png')
 
 def plot_accuracy_latency():
-
+    """
+    accuracy t0 latency figure
+    """
     V, c = get_description(n_gpu=1, n_patients=1)
     cache_latency = read_cache()
     B = []
@@ -187,12 +207,4 @@ def plot_accuracy_latency():
 
 if __name__ == "__main__":
 
-    # fname = 'cache_latency.txt'
-    # fname1 = 'cache_latency1.txt'
-    # cache_latency = []
-    # with open(fname, 'r') as fin, open(fname1, 'w') as fout:
-    #     for line in fin:
-    #         fout.write(line[:79]+', 0.0, 0.0, 0.0, 0.0'+line[79:])
-
     plot_accuracy_latency()
-            
