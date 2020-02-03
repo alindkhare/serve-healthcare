@@ -46,13 +46,14 @@ def random_sample(n_model, B, n_samples):
     Output:
         B \in \{0,1\}^{n_samples \times n_model}
     """
+    max_n_model = 10
     out = []
     i = 0
     while i < n_samples:
         # get a random probability of 1s and 0s
-        pp = np.random.rand()
+        pp = (max_n_model/n_model)*np.random.rand()
         # get random binary vector
-        tmp = np.random.choice([0, 1], size=n_model, p=(pp,1-pp))
+        tmp = np.random.choice([0, 1], size=n_model, p=(1-pp,pp))
         # dedup
         for b in B:
             if np.array_equal(tmp, b):
@@ -131,9 +132,9 @@ def solve_random(V, c, L, lamda):
     print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_random', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
-    return b
+    return opt_b
 
 def solve_greedy_accuracy(V, c, L, lamda):
     """
@@ -166,9 +167,9 @@ def solve_greedy_accuracy(V, c, L, lamda):
     print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_greedy_accuracy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
-    return b
+    return opt_b
 
 def solve_greedy_latency(V, c, L, lamda):
     """
@@ -201,47 +202,67 @@ def solve_greedy_latency(V, c, L, lamda):
     print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_greedy_latency', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
-    return b
+    return opt_b
 
 ##################################################################################################
 # opt
 ##################################################################################################
 def solve_opt_passive(V, c, L, lamda):
 
+    global opt_b_solve_random
+    global opt_b_solve_greedy_accuracy
+    global opt_b_solve_greedy_latency
+
     print("="*60)
     print("start solve_opt_passive")
     # --------------------- hyper parameters ---------------------
     
     if global_debug:
-        N1 = 3
+        N1 = 1
     else:
         N1 = 30 # warm start
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
-    B = []
+    try:
+        B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
+        print('warm init success', B)
+    except:
+        print('warm init failed')
+        if global_debug:
+            B = []
+        else:
+            opt_b_solve_random = solve_random(V, c, L, lamda)
+            opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
+            opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
+            B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
     Y_accuracy = []
     all_latency = []
     Y_latency = []
+
     res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency, 'all_latency':all_latency}
 
     # --------------------- (1) warm start ---------------------
-    B = random_sample(n_model=n_model, B=B, n_samples=N1)
+    print(B)
+    B = B + random_sample(n_model=n_model, B=B, n_samples=N1)
+    print(B)
     # profile
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b))
         tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         all_latency.append(tmp_latency)
         Y_latency.append(np.percentile(tmp_latency, 95))
+        print('latency: ', Y_latency[-1])
         save_checkpoint(res)
 
     # --------------------- (3) solve ---------------------
     all_obj = []
     for i in range(len(B)):
         all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
-    opt_idx = np.argmax(all_obj)
+    print(all_obj)
+    opt_idx = np.argmax(np.nan_to_num(all_obj))
     opt_b = B[opt_idx]
 
     roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
@@ -253,20 +274,24 @@ def solve_opt_passive(V, c, L, lamda):
     print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_opt_passive', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return opt_b
 
 def solve_opt_active(V, c, L, lamda):
+
+    global opt_b_solve_random
+    global opt_b_solve_greedy_accuracy
+    global opt_b_solve_greedy_latency
 
     print("="*60)
     print("start solve_opt_active")
     # --------------------- hyper parameters ---------------------
     
     if global_debug:
-        N1 = 3 # warm start
-        topK = 3 # search near top
-        N3 = 3 # profile
+        N1 = 1 # warm start
+        topK = 1 # search near top
+        N3 = 1 # profile
         epoches = 1
     else:
         N1 = 30 # warm start
@@ -276,14 +301,25 @@ def solve_opt_active(V, c, L, lamda):
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
-    B = []
+    try:
+        B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
+        print('warm init success', B)
+    except:
+        print('warm init failed')
+        if global_debug:
+            B = []
+        else:
+            opt_b_solve_random = solve_random(V, c, L, lamda)
+            opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
+            opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
+            B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
     Y_accuracy = []
     all_latency = []
     Y_latency = []
     res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency, 'all_latency':all_latency}
 
     # --------------------- (1) warm start ---------------------
-    B = random_sample(n_model=n_model, B=B, n_samples=N1)
+    B = B + random_sample(n_model=n_model, B=B, n_samples=N1)
     # profile
     all_obj = []
     for b in tqdm(B):
@@ -291,6 +327,7 @@ def solve_opt_active(V, c, L, lamda):
         tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         all_latency.append(tmp_latency)
         Y_latency.append(np.percentile(tmp_latency, 95))
+        print('latency: ', Y_latency[-1])
         save_checkpoint(res)
         all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L, soft=False))
 
@@ -320,7 +357,7 @@ def solve_opt_active(V, c, L, lamda):
     all_obj = []
     for i in range(len(B)):
         all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
-    opt_idx = np.argmax(all_obj)
+    opt_idx = np.argmax(np.nan_to_num(all_obj))
     opt_b = B[opt_idx]
 
     roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
@@ -332,7 +369,7 @@ def solve_opt_active(V, c, L, lamda):
     print('the accuracy is: ', roc_auc)
     print('the p95 latency is: ', opt_latency)
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_proxy', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], 'solve_opt_active', roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, opt_latency, opt_b))
 
     return opt_b
 
@@ -341,14 +378,18 @@ def solve_opt_active(V, c, L, lamda):
 ##################################################################################################
 def solve_proxy(V, c, L, lamda):
 
+    global opt_b_solve_random
+    global opt_b_solve_greedy_accuracy
+    global opt_b_solve_greedy_latency
+
     print("="*60)
     print("start solve_proxy")
     # --------------------- hyper parameters ---------------------
     
     if global_debug:
-        N1 = 3 # warm start
-        N2 = 1000 # proxy
-        N3 = 3 # profile
+        N1 = 1 # warm start
+        N2 = 10 # proxy
+        N3 = 1 # profile
         epoches = 1
     else:
         N1 = 10 # warm start
@@ -358,7 +399,18 @@ def solve_proxy(V, c, L, lamda):
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
-    B = []
+    try:
+        B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
+        print('warm init success', B)
+    except:
+        print('warm init failed')
+        if global_debug:
+            B = []
+        else:
+            opt_b_solve_random = solve_random(V, c, L, lamda)
+            opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
+            opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
+            B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
     Y_accuracy = []
     all_latency = []
     Y_latency = []
@@ -368,13 +420,14 @@ def solve_proxy(V, c, L, lamda):
 
     # --------------------- (1) warm start ---------------------
     print('warm start')
-    B = random_sample(n_model=n_model, B=B, n_samples=N1)
+    B = B + random_sample(n_model=n_model, B=B, n_samples=N1)
     # profile
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b))
         tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         all_latency.append(tmp_latency)
         Y_latency.append(np.percentile(tmp_latency, 95))
+        print('latency: ', Y_latency[-1])
         save_checkpoint(res)
 
     # --------------------- (2) choose B ---------------------
@@ -409,6 +462,7 @@ def solve_proxy(V, c, L, lamda):
             tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
             all_latency.append(tmp_latency)
             Y_latency.append(np.percentile(tmp_latency, 95))
+            print('latency: ', Y_latency[-1])
             save_checkpoint(res)
 
         B = B + B_0
@@ -418,7 +472,7 @@ def solve_proxy(V, c, L, lamda):
     all_obj = []
     for i in range(len(B)):
         all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
-    opt_idx = np.argmax(all_obj)
+    opt_idx = np.argmax(np.nan_to_num(all_obj))
     opt_b = B[opt_idx]
 
     roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, opt_b, return_all=True)
@@ -440,7 +494,10 @@ if __name__ == "__main__":
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cache_latency = read_cache()
 
-    L = 1.5 # maximum latency
+    if global_debug:
+        L = 1.0 # maximum latency
+    else:
+        L = 1.5 # maximum latency
     lamda = 1
     n_patients_list = [1] # [1,2,5,10,20,50,100]
     
@@ -454,15 +511,15 @@ if __name__ == "__main__":
         print('model description:', V, '\nsystem description:', c)
 
         # ---------- naive solutions ----------
-        opt_b = solve_random(V, c, L, lamda)
-        opt_b = solve_greedy_accuracy(V, c, L, lamda)
-        opt_b = solve_greedy_latency(V, c, L, lamda)
+        opt_b_solve_random = solve_random(V, c, L, lamda)
+        opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
+        opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
 
         # # ---------- opt solutions ----------
-        opt_b = solve_opt_passive(V, c, L, lamda)
-        opt_b = solve_opt_active(V, c, L, lamda)
+        opt_b_solve_opt_passive = solve_opt_passive(V, c, L, lamda)
+        opt_b_solve_opt_active = solve_opt_active(V, c, L, lamda)
 
         # # ---------- proxy solutions ----------
-        opt_b = solve_proxy(V, c, L, lamda)
+        opt_b_solve_proxy = solve_proxy(V, c, L, lamda)
 
 

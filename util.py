@@ -33,23 +33,28 @@ def my_eval(gt, pred):
 def dist(v1, v2):
     return np.sum(np.abs(np.array(v1) - np.array(v2)))
 
-def get_accuracy_profile(V, b, return_all=False, debug=False):
+def get_accuracy_profile(V, b, return_all=False):
     """
     """
-    if debug:
-        return np.random.rand()
-    if np.sum(b) == 0:
-        return np.nan
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_per_patient(b)
+
     if return_all:
-        return roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std
+        if np.sum(b) == 0:
+            return np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan
+        else:
+            roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_per_patient(b)
+            return roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std
     else:
-        return roc_auc
+        if np.sum(b) == 0:
+            return np.nan
+        else:
+            roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_per_patient(b)
+            return roc_auc
 
 
 def get_latency_profile(V, c, b, cache, debug=False):
     """
     """
+    print('profiling: ', b)
 
     if debug:
         return 1e-3*np.random.rand(100)
@@ -62,7 +67,6 @@ def get_latency_profile(V, c, b, cache, debug=False):
             return i[1]
 
     v = V[np.array(b, dtype=bool)]
-    print(V.shape, v.shape, b)
     model_list = []
     for i_model in v:
         model_list.append(get_model(int(i_model[0]), int(i_model[1])))
