@@ -24,7 +24,7 @@ def _calculate_throughput_ensemble(pipeline):
                for _ in range(num_queries)]
     result = ray.get(futures)
     end_time = time.time()
-    mu_qps = (end_time - start_time) / num_queries
+    mu_qps = num_queries / (end_time - start_time)
     return mu_qps
 
 
@@ -98,7 +98,7 @@ def profile_ensemble(model_list, file_path,
             for patient_name in actor_handles.keys():
                 final_cmd = cmd + [patient_name]
                 if not with_data_collector:
-                    final_cmd += [waiting_time_ms]
+                    final_cmd += [str(waiting_time_ms)]
                 ls_output = subprocess.Popen(final_cmd)
                 procs.append(ls_output)
             for p in procs:
