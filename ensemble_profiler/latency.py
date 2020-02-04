@@ -13,6 +13,8 @@ import json
 import torch
 import socket
 import os
+import jsonlines
+import numpy as np
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,6 +36,13 @@ def _heuristic_lambda_calculation(mu_qps):
     rate! Right now the heuristic is set to be 3/4th of mu_qps
     """
     return mu_qps * 0.75
+
+
+def _calculate_latency(file_name, p=95):
+    latency_s = []
+    with jsonlines.open(file_name) as reader:
+        latency_s = [(obj["end"] - obj["start"]) for obj in reader]
+    return np.percentile(latency_s, p)
 
 
 def profile_ensemble(model_list, file_path,
@@ -129,6 +138,7 @@ def profile_ensemble(model_list, file_path,
             fire_remote_clients(url, req_params)
             print("finish firing remote clients")
             serve.shutdown()
+        return _calculate_latency(file_name)
 
 
 def fire_remote_clients(url, req_params):
