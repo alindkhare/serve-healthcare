@@ -75,6 +75,15 @@ def profile_ensemble(model_list, file_path,
         # warming up the gpu
         warmup_gpu(service_handles, warmup=200)
 
+        if with_data_collector:
+            # calculating the throughput
+            mu_qps = _calculate_throughput_ensemble(pipeline)
+            print("Throughput of Ensemble is : {} QPS".format(mu_qps))
+            lambda_qps = _heuristic_lambda_calculation(mu_qps)
+            waiting_time_ms = 1000.0/lambda_qps
+            print("Lambda of Ensemble is: {} QPS,"
+                  " waiting time: {} ms".format(lambda_qps, waiting_time_ms))
+
         # fire client
         if fire_clients:
             print("Firing the clients")
@@ -86,14 +95,6 @@ def profile_ensemble(model_list, file_path,
                 ensembler_path = os.path.join(
                     package_directory, "profile_ensemble.go")
                 cmd = ["go", "run", ensembler_path]
-                # calculating the throughput
-                mu_qps = _calculate_throughput_ensemble(pipeline)
-                print("Throughput of Ensemble is : {} QPS".format(mu_qps))
-                lambda_qps = _heuristic_lambda_calculation(mu_qps)
-                waiting_time_ms = 1000.0/lambda_qps
-                print("Lambda of Ensemble is: {} QPS,"
-                      " waiting time: {} ms".format(lambda_qps, 
-                                                    waiting_time_ms))
 
             procs = []
             for patient_name in actor_handles.keys():
@@ -120,8 +121,11 @@ def profile_ensemble(model_list, file_path,
                 req_params = {"npatient": num_patients, "serve_ip": IPv4addr,
                               "serve_port": serve_port, "go_client_name": "patient_client"}
             else:
-                req_params = {"npatient": num_patients, "serve_ip": IPv4addr,
-                              "serve_port": serve_port, "go_client_name": "profile_ensemble"}
+                req_params = {"npatient": 1,
+                              "serve_ip": IPv4addr,
+                              "serve_port": serve_port,
+                              "go_client_name": "profile_ensemble",
+                              "waiting_time_ms": waiting_time_ms}
             fire_remote_clients(url, req_params)
             print("finish firing remote clients")
             serve.shutdown()
