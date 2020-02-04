@@ -29,7 +29,7 @@ func main() {
 	for i := 0; i <= 100; i++ {
 		// wait for 8 milliseconds to simulate the patient
 		// incoming data
-		time.Sleep(time_ms * time.Millisecond)
+		time.Sleep(time.Duration(time_ms) * time.Millisecond)
 		// This how actual client will send the result
 		go MakeRequest("http://127.0.0.1:8000/profileEnsemble?patient_name="+
 			patient_name+"&value=0.0&vtype=ECG", ch)
