@@ -159,7 +159,7 @@ def warmup_gpu(service_handles, warmup):
     for handle_name in service_handles:
         for e in range(warmup):
             # print("warming up handle {} epoch {}".format(handle_name,e))
-            ObjectID = serve.get_handle(handle_name).remote(
+            ObjectID = service_handles[handle_name].remote(
                 data=torch.zeros(1, 1, total_data_request)
             )
             ray.get(ObjectID)
