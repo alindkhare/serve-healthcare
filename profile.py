@@ -2,6 +2,8 @@
 from resnet1d.resnet1d import ResNet1D
 import ensemble_profiler as profiler
 from pathlib import Path
+import ray.experimental.serve as serve
+import ray
 
 # ECG
 n_channel = 1
@@ -22,4 +24,4 @@ model = ResNet1D(in_channels=n_channel,
 
 filename = "profile_results.jsonl"
 file_path = Path(filename)
-profiler.profile_ensemble([model], file_path,fire_clients=False)
+profiler.profile_ensemble([model], file_path, fire_clients=False)
