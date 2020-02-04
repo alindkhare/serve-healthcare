@@ -115,6 +115,7 @@ def profile_ensemble(model_list, file_path,
             for p in procs:
                 p.wait()
             serve.shutdown()
+            return _calculate_latency(file_name)
         else:
             gw = os.popen("ip -4 route show default").read().split()
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -138,7 +139,7 @@ def profile_ensemble(model_list, file_path,
             fire_remote_clients(url, req_params)
             print("finish firing remote clients")
             serve.shutdown()
-        return _calculate_latency(file_name)
+            return _calculate_latency(file_name)
 
 
 def fire_remote_clients(url, req_params):
