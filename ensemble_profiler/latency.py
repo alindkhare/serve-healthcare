@@ -75,7 +75,7 @@ def profile_ensemble(model_list, file_path,
         # warming up the gpu
         warmup_gpu(service_handles, warmup=200)
 
-        if with_data_collector:
+        if not with_data_collector:
             # calculating the throughput
             mu_qps = _calculate_throughput_ensemble(pipeline)
             print("Throughput of Ensemble is : {} QPS".format(mu_qps))
