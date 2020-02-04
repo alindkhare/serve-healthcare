@@ -17,10 +17,30 @@ import os
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 
-def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
-                     http_host="0.0.0.0", fire_clients=True, with_data_collector=False):
+def _calculate_throughput_ensemble(pipeline):
+    num_queries = 100
+    start_time = time.time()
+    futures = [pipeline.remote(data=torch.zeros(1, 1, 3750))
+               for _ in range(num_queries)]
+    result = ray.get(futures)
+    end_time = time.time()
+    mu_qps = (end_time - start_time) / num_queries
+    return mu_qps
+
+
+def _heuristic_lambda_calculation(mu_qps):
+    """
+    This method heuristically calculates the lambda given a throughput
+    rate! Right now the heuristic is set to be 3/4th of mu_qps
+    """
+    return mu_qps * 0.75
+
+
+def profile_ensemble(model_list, file_path,
+                     constraint={"gpu": 1, "npatient": 1}, http_host="0.0.0.0",
+                     fire_clients=True, with_data_collector=False):
     if not ray.is_initialized():
-        #read constraint
+        # read constraint
         num_patients = int(constraint["npatient"])
         gpu = int(constraint["gpu"])
         serve.init(blocking=True, http_port=5000)
@@ -29,14 +49,15 @@ def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
             file_path.touch()
         file_name = str(file_path.resolve())
         # create the pipeline
-        pipeline, service_handles = create_services(model_list,gpu)
+        pipeline, service_handles = create_services(model_list, gpu)
         # create patient handles
         if with_data_collector:
             actor_handles = start_patient_actors(num_patients=num_patients,
                                                  nursery_handle=nursery_handle,
                                                  pipeline=pipeline)
         else:
-            actor_handles = {f"patient{i}": None for i in range(num_patients)}
+            # if not data collector then only one client needed
+            actor_handles = {f"patient{i}": None for i in range(1)}
 
         # start the http server
         obj_id = nursery_handle.start_actor.remote(HTTPActor,
@@ -50,7 +71,9 @@ def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
         http_actor_handle.run.remote(host=http_host, port=8000)
         # wait for http actor to get started
         time.sleep(2)
-        warmup_gpu(service_handles, warmup = 200)
+
+        # warming up the gpu
+        warmup_gpu(service_handles, warmup=200)
 
         # fire client
         if fire_clients:
@@ -63,10 +86,19 @@ def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
                 ensembler_path = os.path.join(
                     package_directory, "profile_ensemble.go")
                 cmd = ["go", "run", ensembler_path]
-            # patient_name]
+                # calculating the throughput
+                mu_qps = _calculate_throughput_ensemble(pipeline)
+                print("Throughput of Ensemble is : {} QPS".format(mu_qps))
+                lambda_qps = _heuristic_lambda_calculation(mu_qps)
+                waiting_time_ms = 1000.0/lambda_qps
+                print("Lambda of Ensemble is: {} QPS,"
+                      " waiting time: {}".format(lambda_qps, waiting_time_ms))
+
             procs = []
             for patient_name in actor_handles.keys():
                 final_cmd = cmd + [patient_name]
+                if not with_data_collector:
+                    final_cmd += [waiting_time_ms]
                 ls_output = subprocess.Popen(final_cmd)
                 procs.append(ls_output)
             for p in procs:
@@ -76,18 +108,23 @@ def profile_ensemble(model_list, file_path, constraint={"gpu":1, "npatient":1},
             gw = os.popen("ip -4 route show default").read().split()
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect((gw[2], 0))
-            IPv4addr = s.getsockname()[0]  #for where the server ray.serve() request will be executed
+            # for where the server ray.serve() request will be executed
+            IPv4addr = s.getsockname()[0]
             serve_port = 8000
 
-            url = "http://130.207.25.143:4000/jsonrpc" #for client address. In the experiment points to pluto
+            # for client address. In the experiment points to pluto
+            url = "http://130.207.25.143:4000/jsonrpc"
             print("sending RPC request form IPv4 addr: {}".format(IPv4addr))
             if with_data_collector:
-                req_params = {"npatient":num_patients, "serve_ip":IPv4addr, "serve_port":serve_port, "go_client_name":"patient_client"}
+                req_params = {"npatient": num_patients, "serve_ip": IPv4addr,
+                              "serve_port": serve_port, "go_client_name": "patient_client"}
             else:
-                req_params = {"npatient":num_patients, "serve_ip":IPv4addr, "serve_port":serve_port, "go_client_name":"profile_ensemble"}
+                req_params = {"npatient": num_patients, "serve_ip": IPv4addr,
+                              "serve_port": serve_port, "go_client_name": "profile_ensemble"}
             fire_remote_clients(url, req_params)
             print("finish firing remote clients")
             serve.shutdown()
+
 
 def fire_remote_clients(url, req_params):
     payload = {
@@ -99,6 +136,7 @@ def fire_remote_clients(url, req_params):
     response = requests.post(url, json=payload).json()
     print("{}".format(response))
 
+
 def warmup_gpu(service_handles, warmup):
     print("warmup GPU")
     total_data_request = 3750
@@ -106,8 +144,7 @@ def warmup_gpu(service_handles, warmup):
         for e in range(warmup):
             # print("warming up handle {} epoch {}".format(handle_name,e))
             ObjectID = serve.get_handle(handle_name).remote(
-                    data=torch.zeros(1,1,total_data_request)
+                data=torch.zeros(1, 1, total_data_request)
             )
             ray.get(ObjectID)
     print("finish warming up GPU by firing torch zero {} times".format(warmup))
-
