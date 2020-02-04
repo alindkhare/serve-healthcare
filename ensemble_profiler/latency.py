@@ -82,7 +82,7 @@ def profile_ensemble(model_list, file_path,
         time.sleep(2)
 
         # warming up the gpu
-        warmup_gpu(service_handles, warmup=200)
+        warmup_gpu(pipeline, warmup=200)
 
         if not with_data_collector:
             # calculating the throughput
