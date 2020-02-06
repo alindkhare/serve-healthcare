@@ -9,6 +9,7 @@ class PytorchPredictorECG:
     """
 
     def __init__(self, model, cuda=False):
+        print("checkkkkk")
         self.cuda = cuda
         self.model = model
         if cuda:
