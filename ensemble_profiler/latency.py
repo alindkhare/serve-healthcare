@@ -6,6 +6,7 @@ import time
 from ensemble_profiler.server import HTTPActor
 import subprocess
 from ensemble_profiler.constants import ROUTE_ADDRESS, PROFILE_ENSEMBLE
+from ensemble_profiler.tq_simulator import find_tq
 import time
 from threading import Event
 import requests
@@ -115,7 +116,11 @@ def profile_ensemble(model_list, file_path,
             for p in procs:
                 p.wait()
             serve.shutdown()
-            return _calculate_latency(file_name)
+            T_s = _calculate_latency(file_name)
+            if not with_data_collector:
+                T_q = find_tq(lambda_qps, num_patients, mu_qps, T_s)
+                return T_q + T_s
+            return T_s
         else:
             gw = os.popen("ip -4 route show default").read().split()
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -139,7 +144,11 @@ def profile_ensemble(model_list, file_path,
             fire_remote_clients(url, req_params)
             print("finish firing remote clients")
             serve.shutdown()
-            return _calculate_latency(file_name)
+            T_s = _calculate_latency(file_name)
+            if not with_data_collector:
+                T_q = find_tq(lambda_qps, num_patients, mu_qps, T_s)
+                return T_q + T_s
+            return T_s
 
 
 def fire_remote_clients(url, req_params):
