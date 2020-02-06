@@ -19,7 +19,7 @@ import time
 from ensemble_profiler.nursery import PatientActorNursery
 
 
-def create_services(model_list,gpu):
+def create_services(model_list, gpu):
     all_services = []
     # create relevant services
     model_services = []
@@ -27,31 +27,32 @@ def create_services(model_list,gpu):
         model_service_name = MODEL_SERVICE_ECG_PREFIX + "::" + str(i)
         model_services.append(model_service_name)
         serve.create_endpoint(model_service_name)
-    all_services += model_services
-    serve.create_endpoint(AGGREGATE_PREDICTIONS)
-    all_services.append(AGGREGATE_PREDICTIONS)
-    nmodel = len(model_list)
-    if nmodel % gpu == 0:
-        gpu_fraction = gpu / len(model_list)
-    else:
-        gpu_fraction = gpu / (nmodel+1)
-    for service, model in zip(model_services, model_list): 
-        b_config = BackendConfig(num_replicas=1, num_gpus=gpu_fraction)
-        serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
-                             model, True, backend_config=b_config)
-    serve.create_backend(Aggregate, BACKEND_PREFIX+AGGREGATE_PREDICTIONS)
+    return 1, 2
+    # all_services += model_services
+    # serve.create_endpoint(AGGREGATE_PREDICTIONS)
+    # all_services.append(AGGREGATE_PREDICTIONS)
+    # nmodel = len(model_list)
+    # if nmodel % gpu == 0:
+    #     gpu_fraction = gpu / len(model_list)
+    # else:
+    #     gpu_fraction = gpu / (nmodel+1)
+    # for service, model in zip(model_services, model_list):
+    #     b_config = BackendConfig(num_replicas=1, num_gpus=gpu_fraction)
+    #     serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
+    #                          model, True, backend_config=b_config)
+    # serve.create_backend(Aggregate, BACKEND_PREFIX+AGGREGATE_PREDICTIONS)
 
-    # link services to backends
-    for service in all_services:
-        serve.link(service, BACKEND_PREFIX+service)
+    # # link services to backends
+    # for service in all_services:
+    #     serve.link(service, BACKEND_PREFIX+service)
 
-    # get handles
-    service_handles = {}
-    for service in all_services:
-        service_handles[service] = serve.get_handle(service)
+    # # get handles
+    # service_handles = {}
+    # for service in all_services:
+    #     service_handles[service] = serve.get_handle(service)
 
-    pipeline = EnsemblePipeline(model_services, service_handles)
-    return pipeline, service_handles
+    # pipeline = EnsemblePipeline(model_services, service_handles)
+    # return pipeline, service_handles
 
 
 def start_nursery():
