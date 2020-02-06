@@ -37,6 +37,7 @@ def create_services(model_list, gpu):
     else:
         gpu_fraction = gpu / (nmodel+1)
     print(PytorchPredictorECG)
+    print(type(model_list[0]))
     # for service, model in zip(model_services, model_list):
     #     b_config = BackendConfig(num_replicas=1, num_gpus=gpu_fraction)
     #     print(type(model))
