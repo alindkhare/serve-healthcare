@@ -58,7 +58,7 @@ def profile_ensemble(model_list, file_path,
         #     file_path.touch()
         # file_name = str(file_path.resolve())
         # # create the pipeline
-        # pipeline, service_handles = create_services(model_list, gpu)
+        pipeline, service_handles = create_services(model_list, gpu)
         return
         # # create patient handles
         # if with_data_collector:
