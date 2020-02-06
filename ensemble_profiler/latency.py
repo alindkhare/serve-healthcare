@@ -78,85 +78,86 @@ def profile_ensemble(model_list, file_path,
 
         http_actor_handle = ray.get(obj_id)[0]
         http_actor_handle.run.remote(host=http_host, port=8000)
-        # wait for http actor to get started
-        time.sleep(2)
+        return 1
+#         # wait for http actor to get started
+#         time.sleep(2)
 
-        # warming up the gpu
-        warmup_gpu(pipeline, warmup=200)
+#         # warming up the gpu
+#         warmup_gpu(pipeline, warmup=200)
 
-        if not with_data_collector:
-            # calculating the throughput
-            mu_qps = _calculate_throughput_ensemble(pipeline)
-            print("Throughput of Ensemble is : {} QPS".format(mu_qps))
-            lambda_qps = _heuristic_lambda_calculation(mu_qps)
-            waiting_time_ms = 1000.0/lambda_qps
-            print("Lambda of Ensemble is: {} QPS,"
-                  " waiting time: {} ms".format(lambda_qps, waiting_time_ms))
+#         if not with_data_collector:
+#             # calculating the throughput
+#             mu_qps = _calculate_throughput_ensemble(pipeline)
+#             print("Throughput of Ensemble is : {} QPS".format(mu_qps))
+#             lambda_qps = _heuristic_lambda_calculation(mu_qps)
+#             waiting_time_ms = 1000.0/lambda_qps
+#             print("Lambda of Ensemble is: {} QPS,"
+#                   " waiting time: {} ms".format(lambda_qps, waiting_time_ms))
 
-        # fire client
-        if fire_clients:
-            print("Firing the clients")
-            if with_data_collector:
-                client_path = os.path.join(
-                    package_directory, "patient_client.go")
-                cmd = ["go", "run", client_path]
-            else:
-                ensembler_path = os.path.join(
-                    package_directory, "profile_ensemble.go")
-                cmd = ["go", "run", ensembler_path]
+#         # fire client
+#         if fire_clients:
+#             print("Firing the clients")
+#             if with_data_collector:
+#                 client_path = os.path.join(
+#                     package_directory, "patient_client.go")
+#                 cmd = ["go", "run", client_path]
+#             else:
+#                 ensembler_path = os.path.join(
+#                     package_directory, "profile_ensemble.go")
+#                 cmd = ["go", "run", ensembler_path]
 
-            procs = []
-            for patient_name in actor_handles.keys():
-                final_cmd = cmd + [patient_name]
-                if not with_data_collector:
-                    final_cmd += [str(waiting_time_ms)]
-                ls_output = subprocess.Popen(final_cmd)
-                procs.append(ls_output)
-            for p in procs:
-                p.wait()
-            serve.shutdown()
-            return _calculate_latency(file_name)
-        else:
-            gw = os.popen("ip -4 route show default").read().split()
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect((gw[2], 0))
-            # for where the server ray.serve() request will be executed
-            IPv4addr = s.getsockname()[0]
-            serve_port = 8000
+#             procs = []
+#             for patient_name in actor_handles.keys():
+#                 final_cmd = cmd + [patient_name]
+#                 if not with_data_collector:
+#                     final_cmd += [str(waiting_time_ms)]
+#                 ls_output = subprocess.Popen(final_cmd)
+#                 procs.append(ls_output)
+#             for p in procs:
+#                 p.wait()
+#             serve.shutdown()
+#             return _calculate_latency(file_name)
+#         else:
+#             gw = os.popen("ip -4 route show default").read().split()
+#             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#             s.connect((gw[2], 0))
+#             # for where the server ray.serve() request will be executed
+#             IPv4addr = s.getsockname()[0]
+#             serve_port = 8000
 
-            # for client address. In the experiment points to pluto
-            url = "http://130.207.25.143:4000/jsonrpc"
-            print("sending RPC request form IPv4 addr: {}".format(IPv4addr))
-            if with_data_collector:
-                req_params = {"npatient": num_patients, "serve_ip": IPv4addr,
-                              "serve_port": serve_port, "go_client_name": "patient_client"}
-            else:
-                req_params = {"npatient": 1,
-                              "serve_ip": IPv4addr,
-                              "serve_port": serve_port,
-                              "go_client_name": "profile_ensemble",
-                              "waiting_time_ms": waiting_time_ms}
-            fire_remote_clients(url, req_params)
-            print("finish firing remote clients")
-            serve.shutdown()
-            return _calculate_latency(file_name)
-
-
-def fire_remote_clients(url, req_params):
-    payload = {
-        "method": "fire_client",
-        "params": req_params,
-        "jsonrpc": "2.0",
-        "id": 0
-    }
-    response = requests.post(url, json=payload).json()
-    print("{}".format(response))
+#             # for client address. In the experiment points to pluto
+#             url = "http://130.207.25.143:4000/jsonrpc"
+#             print("sending RPC request form IPv4 addr: {}".format(IPv4addr))
+#             if with_data_collector:
+#                 req_params = {"npatient": num_patients, "serve_ip": IPv4addr,
+#                               "serve_port": serve_port, "go_client_name": "patient_client"}
+#             else:
+#                 req_params = {"npatient": 1,
+#                               "serve_ip": IPv4addr,
+#                               "serve_port": serve_port,
+#                               "go_client_name": "profile_ensemble",
+#                               "waiting_time_ms": waiting_time_ms}
+#             fire_remote_clients(url, req_params)
+#             print("finish firing remote clients")
+#             serve.shutdown()
+#             return _calculate_latency(file_name)
 
 
-def warmup_gpu(pipeline, warmup):
-    print("warmup GPU")
-    total_data_request = 3750
-    futures = [pipeline.remote(data=torch.zeros(1, 1, total_data_request))
-               for _ in range(warmup)]
-    ray.get(futures)
-    print("finish warming up GPU by firing torch zero {} times".format(warmup))
+# def fire_remote_clients(url, req_params):
+#     payload = {
+#         "method": "fire_client",
+#         "params": req_params,
+#         "jsonrpc": "2.0",
+#         "id": 0
+#     }
+#     response = requests.post(url, json=payload).json()
+#     print("{}".format(response))
+
+
+# def warmup_gpu(pipeline, warmup):
+#     print("warmup GPU")
+#     total_data_request = 3750
+#     futures = [pipeline.remote(data=torch.zeros(1, 1, total_data_request))
+#                for _ in range(warmup)]
+#     ray.get(futures)
+#     print("finish warming up GPU by firing torch zero {} times".format(warmup))
