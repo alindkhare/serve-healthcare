@@ -2,3 +2,4 @@ tqdm
 matplotlib
 sklearn
 requests
+jsonlines
