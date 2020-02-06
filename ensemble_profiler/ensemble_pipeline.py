@@ -11,15 +11,18 @@ class EnsemblePipeline:
     def remote(self, data):
         kwargs_for_aggregate = {}
         for model_service in self.model_services:
+            print("model service: {}".format(model_service))
             md_object_id = ray.ObjectID.from_random()
             kwargs_for_aggregate[model_service] = md_object_id
             self.service_handles[model_service].remote(
                 data=data,
                 return_object_ids={serve.RESULT_KEY: md_object_id}
             )
+        print("Now aggreating the result")
         aggregate_object_id = ray.ObjectID.from_random()
         self.service_handles[AGGREGATE_PREDICTIONS].remote(
             **kwargs_for_aggregate,
             return_object_ids={serve.RESULT_KEY: aggregate_object_id}
         )
+        print("Returning the oid")
         return aggregate_object_id
