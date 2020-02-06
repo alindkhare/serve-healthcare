@@ -27,15 +27,16 @@ def create_services(model_list, gpu):
         model_service_name = MODEL_SERVICE_ECG_PREFIX + "::" + str(i)
         model_services.append(model_service_name)
         serve.create_endpoint(model_service_name)
+
+    all_services += model_services
+    serve.create_endpoint(AGGREGATE_PREDICTIONS)
+    all_services.append(AGGREGATE_PREDICTIONS)
+    nmodel = len(model_list)
+    if nmodel % gpu == 0:
+        gpu_fraction = gpu / len(model_list)
+    else:
+        gpu_fraction = gpu / (nmodel+1)
     return 1, 2
-    # all_services += model_services
-    # serve.create_endpoint(AGGREGATE_PREDICTIONS)
-    # all_services.append(AGGREGATE_PREDICTIONS)
-    # nmodel = len(model_list)
-    # if nmodel % gpu == 0:
-    #     gpu_fraction = gpu / len(model_list)
-    # else:
-    #     gpu_fraction = gpu / (nmodel+1)
     # for service, model in zip(model_services, model_list):
     #     b_config = BackendConfig(num_replicas=1, num_gpus=gpu_fraction)
     #     serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
