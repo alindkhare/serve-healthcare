@@ -80,7 +80,8 @@ def profile_ensemble(model_list, file_path,
         http_actor_handle.run.remote(host=http_host, port=8000)
         time.sleep(2)
         total_data_request = 3750
-        ans = ray.get(pipeline.remote(data=torch.zeros(1, 1, total_data_request))
+        ans = ray.get(pipeline.remote(
+            data=torch.zeros(1, 1, total_data_request)))
         return 1
 #         # wait for http actor to get started
 #         time.sleep(2)
