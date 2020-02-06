@@ -22,7 +22,7 @@ model = ResNet1D(in_channels=n_channel,
                  increasefilter_gap=max(n_block//4, 1),
                  verbose=False)
 print("yooooooo")
-# filename = "profile_results.jsonl"
-# file_path = Path(filename)
-# ans = profiler.profile_ensemble([model], file_path, fire_clients=False)
-# print("Answer is : {}".format(ans))
+filename = "profile_results.jsonl"
+file_path = Path(filename)
+ans = profiler.profile_ensemble([model], file_path, fire_clients=False)
+print("Answer is : {}".format(ans))
