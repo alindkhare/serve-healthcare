@@ -10,14 +10,15 @@ class PytorchPredictorECG:
 
     def __init__(self, model, cuda=False):
         print("checkkkkk")
-        self.cuda = cuda
-        self.model = model
-        if cuda:
-            self.model = self.model.cuda()
+        # self.cuda = cuda
+        # self.model = model
+        # if cuda:
+        #     self.model = self.model.cuda()
 
     def __call__(self, flask_request, data):
-        if self.cuda:
-            data = data.cuda()
-        # do the prediction
-        result = self.model(data)
-        return result.data.cpu().numpy().argmax().item()
+        pass
+        # if self.cuda:
+        #     data = data.cuda()
+        # # do the prediction
+        # result = self.model(data)
+        # return result.data.cpu().numpy().argmax().item()
