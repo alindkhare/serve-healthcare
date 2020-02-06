@@ -8,7 +8,7 @@ class PytorchPredictorECG:
         cuda(bool): to use_gpu or not.
     """
 
-    def __init__(self, model, cuda=False):
+    def __init__(self, cuda=False):
         print("checkkkkk")
         # self.cuda = cuda
         # self.model = model

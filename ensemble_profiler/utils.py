@@ -39,8 +39,9 @@ def create_services(model_list, gpu):
     print(PytorchPredictorECG)
     for service, model in zip(model_services, model_list):
         b_config = BackendConfig(num_replicas=1, num_gpus=gpu_fraction)
+        print(type(model))
         serve.create_backend(PytorchPredictorECG, BACKEND_PREFIX+service,
-                             model, True, backend_config=b_config)
+                             True, backend_config=b_config)
     return 1, 2
     # serve.create_backend(Aggregate, BACKEND_PREFIX+AGGREGATE_PREDICTIONS)
 
