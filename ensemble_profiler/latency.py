@@ -54,36 +54,37 @@ def profile_ensemble(model_list, file_path,
         gpu = int(constraint["gpu"])
         serve.init(blocking=True, http_port=5000)
         nursery_handle = start_nursery()
-        if not os.path.exists(str(file_path.resolve())):
-            file_path.touch()
-        file_name = str(file_path.resolve())
-        # create the pipeline
-        pipeline, service_handles = create_services(model_list, gpu)
-        # create patient handles
-        if with_data_collector:
-            actor_handles = start_patient_actors(num_patients=num_patients,
-                                                 nursery_handle=nursery_handle,
-                                                 pipeline=pipeline)
-        else:
-            # if not data collector then only one client needed
-            actor_handles = {f"patient{i}": None for i in range(1)}
+        # if not os.path.exists(str(file_path.resolve())):
+        #     file_path.touch()
+        # file_name = str(file_path.resolve())
+        # # create the pipeline
+        # pipeline, service_handles = create_services(model_list, gpu)
+        return
+        # # create patient handles
+        # if with_data_collector:
+        #     actor_handles = start_patient_actors(num_patients=num_patients,
+        #                                          nursery_handle=nursery_handle,
+        #                                          pipeline=pipeline)
+        # else:
+        #     # if not data collector then only one client needed
+        #     actor_handles = {f"patient{i}": None for i in range(1)}
 
-        # start the http server
-        obj_id = nursery_handle.start_actor.remote(HTTPActor,
-                                                   "HEALTH_HTTP_SERVER",
-                                                   init_args=[ROUTE_ADDRESS,
-                                                              actor_handles,
-                                                              pipeline,
-                                                              file_name])
+        # # start the http server
+        # obj_id = nursery_handle.start_actor.remote(HTTPActor,
+        #                                            "HEALTH_HTTP_SERVER",
+        #                                            init_args=[ROUTE_ADDRESS,
+        #                                                       actor_handles,
+        #                                                       pipeline,
+        #                                                       file_name])
 
-        http_actor_handle = ray.get(obj_id)[0]
-        http_actor_handle.run.remote(host=http_host, port=8000)
-        time.sleep(2)
-        total_data_request = 3750
-        ans = ray.get(pipeline.remote(
-            data=torch.zeros(1, 1, total_data_request)))
-        print("hahahahahah")
-        return ans
+        # http_actor_handle = ray.get(obj_id)[0]
+        # http_actor_handle.run.remote(host=http_host, port=8000)
+        # time.sleep(2)
+        # total_data_request = 3750
+        # ans = ray.get(pipeline.remote(
+        #     data=torch.zeros(1, 1, total_data_request)))
+        # print("hahahahahah")
+        # return ans
 #         # wait for http actor to get started
 #         time.sleep(2)
 
