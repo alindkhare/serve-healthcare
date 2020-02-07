@@ -37,6 +37,11 @@ def dist(v1, v2):
 def get_accuracy_profile(V, b, return_all=False):
     """
     """
+    print('profiling accuracy: ', b)
+    # if return_all:
+    #     return np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand()
+    # else:
+    #     return np.random.rand()
 
     if return_all:
         if np.sum(b) == 0:
@@ -56,6 +61,35 @@ def get_accuracy_profile(V, b, return_all=False):
                 return 0
 
 def get_latency_profile(V, c, b, cache, debug=False):
+    """
+    need add cache
+    """
+    print('profiling latency: ', b)
+
+    # return np.random.rand()
+
+    if debug:
+        return 1e-3*np.random.rand(100)
+    if np.sum(b) == 0:
+        return 1e6
+
+    v = V[np.array(b, dtype=bool)]
+    model_list = []
+    for i_model in v:
+        model_list.append(get_model(int(i_model[0]), int(i_model[1])))
+
+    filename = "profile_results.jsonl"
+    p = Path(filename)
+    p.touch()
+    os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
+    file_path = Path(filename)
+    system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
+    print(system_constraint)
+    final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+
+    return final_latency
+
+def get_latency_profile_v1(V, c, b, cache, debug=False):
     """
     """
     print('profiling: ', b)
@@ -116,8 +150,6 @@ def read_cache():
             cache_latency.append([b, np.percentile(latency, 95), latency])
     return cache_latency
 
-
-
 def write_description():
     base_filters_list = [8, 16, 32, 64, 128]
     n_block_list = [2, 4, 8, 16]
@@ -142,6 +174,7 @@ def get_description(n_gpu, n_patients):
     """
 
     df = pd.read_csv('model_list_small.csv')
+    print('model description:', df.values)
     V = df.iloc[:, 1:].values
     c = np.array([n_gpu, n_patients])
 
