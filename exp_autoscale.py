@@ -13,7 +13,7 @@ from tqdm import tqdm
 from datetime import datetime
 import copy
 
-from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache, get_description
+from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, get_description
 
 ##################################################################################################
 # tools
@@ -409,7 +409,7 @@ if __name__ == "__main__":
 
     global_debug = True
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    cache_latency = read_cache()
+    cache_latency = read_cache_latency()
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
