@@ -165,7 +165,6 @@ def fire_remote_clients(url, req_params):
 def warmup_gpu(pipeline, warmup):
     print("warmup GPU")
     total_data_request = 3750
-    futures = [pipeline.remote(data=torch.zeros(1, 1, total_data_request))
-               for _ in range(warmup)]
-    ray.get(futures)
+    for _ in range(warmup):
+        ray.get(pipeline.remote(data=torch.zeros(1, 1, total_data_request)))
     print("finish warming up GPU by firing torch zero {} times".format(warmup))
