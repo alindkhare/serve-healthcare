@@ -423,20 +423,18 @@ if __name__ == "__main__":
     with open(log_name, 'w') as fout:
         fout.write(current_time+'\n')
     
-    for n_patients in n_patients_list:
+    V, c = get_description(n_gpu=1, n_patients=1)
+    print('model description:\n', V, '\nsystem description:', c)
 
-        V, c = get_description(n_gpu=1, n_patients=n_patients)
-        print('model description:', V, '\nsystem description:', c)
+    # # ---------- naive solutions ----------
+    opt_b_solve_random = solve_random(V, c, L, lamda)
+    opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
+    opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
 
-        # # ---------- naive solutions ----------
-        opt_b_solve_random = solve_random(V, c, L, lamda)
-        opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
-        opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
+    # # ---------- BO solution ----------
+    opt_b_solve_opt_passive = solve_opt_passive(V, c, L, lamda)
 
-        # # ---------- BO solution ----------
-        opt_b_solve_opt_passive = solve_opt_passive(V, c, L, lamda)
-
-        # ---------- AutoScale solution ----------
-        opt_b_solve_proxy = solve_proxy(V, c, L, lamda)
+    # ---------- AutoScale solution ----------
+    opt_b_solve_proxy = solve_proxy(V, c, L, lamda)
 
 

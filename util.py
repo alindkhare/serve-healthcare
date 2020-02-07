@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+from datetime import datetime
 
 def get_now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -108,7 +109,9 @@ def get_latency_profile(V, c, b, cache, debug=False):
     v = V[np.array(b, dtype=bool)]
     model_list = []
     for i_model in v:
-        model_list.append(get_model(int(i_model[0]), int(i_model[1])))
+        base_filters, n_block = int(i_model[0]), int(i_model[1])
+        print(base_filters, n_block)
+        model_list.append(get_model(base_filters, n_block))
 
     filename = "profile_results.jsonl"
     p = Path(filename)
