@@ -115,7 +115,7 @@ class HTTPProxy:
         obs_w_30sec = query_kwargs.pop("obs_w_30sec", None)
         if obs_w_30sec is None:
             raise ValueError("Specify obs_w_30sec in query")
-        obs_w_30sec = obs_w_30sec[0]
+        obs_w_30sec = int(obs_w_30sec[0])
         prediction_tensor = torch.zeros((obs_w_30sec, 1, PREDITICATE_INTERVAL))
 
         request_sent_time = time.time()
