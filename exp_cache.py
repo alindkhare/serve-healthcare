@@ -5,16 +5,15 @@ import pickle
 import random
 from tqdm import tqdm
 
-from util import my_eval, get_accuracy_profile, get_latency_profile, get_description, get_now
+from util import my_eval, get_accuracy_profile, get_latency_profile, get_description, get_description_small, get_now, b2cnt, cnt2b
 
-if __name__ == "__main__":
+def b_cache():
 
     outname = 'cache_latency.txt'
     # with open(outname, 'w') as fout:
     #     fout.write(get_now()+'\n')
     
-    V, c = get_description(n_gpu=1, n_patients=1)
-    n_model = V.shape[0]
+    V, c = get_description_small(n_gpu=1, n_patients=1)
 
     # 1 model
     for i1 in range(n_model):
@@ -76,6 +75,29 @@ if __name__ == "__main__":
                         with open(outname, 'a') as fout:
                             fout.write('{},{},{}\n'.format(get_now(), list(b), tmp_latency))
 
+def cnt_cache():
+
+    outname = 'cache_latency.txt'
+    with open(outname, 'w') as fout:
+        fout.write('time,count,latency\n')
+    
+    V, c = get_description_small(n_gpu=1, n_patients=1)
+
+    # 1 model
+    for i1 in range(4):
+        for i2 in range(4):
+            for i3 in range(4):
+                for i4 in range(4):
+                    cnt = [0]*16 + [i1, i2, i3, i4]
+                    b = cnt2b(cnt, V)
+                    tmp_latency = get_latency_profile(V, c, b, cache=None)
+                    with open(outname, 'a') as fout:
+                        fout.write('{}|{}|{}\n'.format(get_now(), cnt, tmp_latency))
+
+
+if __name__ == "__main__":
+
+    cnt_cache()
 
 
 

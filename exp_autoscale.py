@@ -126,8 +126,7 @@ def write_res(V, c, b, method):
     profile and write a line
     """
     roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std = get_accuracy_profile(V, b, return_all=True)
-    tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-    latency = np.percentile(tmp_latency, 95)
+    latency = get_latency_profile(V, c, b, cache=cache_latency)
 
     with open(log_name, 'a') as fout:
         fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
@@ -138,8 +137,7 @@ def write_traj(V, c, b, method):
     """
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std = get_accuracy_profile(V, b, return_all=True)
-    tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-    latency = np.percentile(tmp_latency, 95)
+    latency = get_latency_profile(V, c, b, cache=cache_latency)
 
     with open(traj_name, 'a') as fout:
         fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
@@ -409,7 +407,7 @@ if __name__ == "__main__":
 
     global_debug = True
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    cache_latency = None #read_cache_latency()
+    cache_latency = read_cache_latency()
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
