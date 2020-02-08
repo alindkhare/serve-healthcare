@@ -48,7 +48,8 @@ def _calculate_latency(file_name, p=95):
 
 def profile_ensemble(model_list, file_path,
                      constraint={"gpu": 1, "npatient": 1}, http_host="0.0.0.0",
-                     fire_clients=True, with_data_collector=False):
+                     fire_clients=True, with_data_collector=False, 
+                     obs_w_30sec=1):
     if not ray.is_initialized():
         # read constraint
         num_patients = int(constraint["npatient"])
@@ -140,7 +141,8 @@ def profile_ensemble(model_list, file_path,
                               "serve_ip": IPv4addr,
                               "serve_port": serve_port,
                               "go_client_name": "profile_ensemble",
-                              "waiting_time_ms": waiting_time_ms}
+                              "waiting_time_ms": waiting_time_ms,
+                              "obs_w_30sec":obs_w_30sec}
             fire_remote_clients(url, req_params)
             print("finish firing remote clients")
             serve.shutdown()
