@@ -111,7 +111,11 @@ class HTTPProxy:
             raise ValueError("Multiple Patients specified."
                              "Specify only one.")
         patient_name = patient_name[0]
-        prediction_tensor = torch.zeros((1, 1, PREDITICATE_INTERVAL))
+
+        obs_w_30sec = query_kwargs.pop("obs_w_30sec", None)
+        if obs_w_30sec is None:
+            raise ValueError("Specify obs_w_30sec in query")
+        prediction_tensor = torch.zeros((obs_w_30sec, 1, PREDITICATE_INTERVAL))
 
         request_sent_time = time.time()
         result = await self.ensemble_pipeline.remote(data=prediction_tensor)
