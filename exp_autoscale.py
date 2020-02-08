@@ -1,5 +1,5 @@
 """
-todo: (1) revise all terminologies
+
 """
 
 
@@ -13,7 +13,7 @@ from tqdm import tqdm
 from datetime import datetime
 import copy
 
-from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, get_description
+from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, get_description, get_description_small
 
 ##################################################################################################
 # tools
@@ -125,24 +125,24 @@ def write_res(V, c, b, method):
     """
     profile and write a line
     """
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, b, return_all=True)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std = get_accuracy_profile(V, b, return_all=True)
     tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
     latency = np.percentile(tmp_latency, 95)
 
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
 
 def write_traj(V, c, b, method):
     """
     more detailed results than write_res
     """
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std = get_accuracy_profile(V, b, return_all=True)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std = get_accuracy_profile(V, b, return_all=True)
     tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
     latency = np.percentile(tmp_latency, 95)
 
     with open(traj_name, 'a') as fout:
-        fout.write('{},{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(current_time, c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
 
 ##################################################################################################
 # naive
@@ -409,7 +409,7 @@ if __name__ == "__main__":
 
     global_debug = True
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    cache_latency = read_cache_latency()
+    cache_latency = None #read_cache_latency()
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
@@ -423,7 +423,7 @@ if __name__ == "__main__":
     with open(log_name, 'w') as fout:
         fout.write(current_time+'\n')
     
-    V, c = get_description(n_gpu=1, n_patients=1)
+    V, c = get_description_small(n_gpu=1, n_patients=1)
     print('model description:\n', V, '\nsystem description:', c)
 
     # # ---------- naive solutions ----------

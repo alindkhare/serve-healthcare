@@ -2,9 +2,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-from resnet1d.resnet1d import ResNet1D
-import ensemble_profiler as profiler
-from evaluate_results import evaluate_ensemble_models, evaluate_ensemble_models_per_patient
 from pathlib import Path
 import os
 import json
@@ -14,6 +11,12 @@ from sklearn.metrics import r2_score, mean_absolute_error
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from datetime import datetime
+
+from resnet1d.resnet1d import ResNet1D
+import ensemble_profiler as profiler
+# from evaluate_results import evaluate_ensemble_models, evaluate_ensemble_models_per_patient
+from choa_evaluate_results import evaluate_ensemble_models_per_patient, evaluate_ensemble_models_with_history_per_patient
+
 
 def get_now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -48,15 +51,33 @@ def get_description(n_gpu, n_patients):
 
     return V, c
 
+def get_description_small(n_gpu, n_patients):
+    """
+    return V and c
+
+    V: base_filters, n_block, accuracy, flops, size
+    c: n_gpu, n_patients
+    """
+
+    df = pd.read_csv('model_list_small.csv')
+    print('model description:\n', df)
+    V = df.loc[:, ['n_filters', 'n_blocks']].values
+    c = np.array([n_gpu, n_patients])
+    print(V)
+
+    return V, c
+
 def read_cache_latency():
     fname = 'cache_latency.txt'
     cache_latency = []
     with open(fname, 'r') as fin:
         fin.readline()
         for line in fin:
-            content = line.strip('\n|[|]').split('],[')
-            b = np.array([int(float(i)) for i in content[0].split(',')])
-            latency = float(content[1])
+            content = line.strip('\n|[|]').split('(],)|(,[)')
+            print(content)
+            exit()
+            b = np.array([int(float(i)) for i in content[1].split(',')])
+            latency = float(content[2])
             cache_latency.append([b, latency])
     return cache_latency
 
@@ -69,6 +90,34 @@ def dist(v1, v2):
 # ------------------------------------------------------------------------------------------------
 def get_accuracy_profile(V, b, return_all=False):
     """
+    choa
+    """
+    print('profiling accuracy: ', b)
+    # if return_all:
+    #     return np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand()
+    # else:
+    #     return np.random.rand()
+
+    if return_all:
+        if np.sum(b) == 0:
+            return 0,0,0,0,0,0,0,0,0,0,0,0
+        else:
+            roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_per_patient(b)
+            return roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std
+    else:
+        if np.sum(b) == 0:
+            return 0
+        else:
+            try:
+                roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_per_patient(b)
+                return roc_auc
+            except:
+                print(b)
+                return 0
+
+def get_accuracy_profile_mimic(V, b, return_all=False):
+    """
+    mimic-iii
     """
     print('profiling accuracy: ', b)
     # if return_all:
@@ -120,7 +169,10 @@ def get_latency_profile(V, c, b, cache, debug=False):
     file_path = Path(filename)
     system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
     print(system_constraint)
-    final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+    try:
+        final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+    except:
+        final_latency = np.inf
 
     if cache is not None:
         cache.append([list(b), final_latency])

@@ -17,7 +17,7 @@ if __name__ == "__main__":
     n_model = V.shape[0]
 
     # 1 model
-    for i1 in range(19,n_model):
+    for i1 in range(n_model):
         b = np.zeros(n_model)
         b[i1] = 1
         tmp_latency = get_latency_profile(V, c, b, cache=None)
