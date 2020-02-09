@@ -28,8 +28,8 @@ def find_max_horizontal_distance(arrival_curve, service_curve, x_val):
     # for arrival curve should be
     # greater than x_values for service curve as arrival
     # curve is above service curve before crossing index
-    assert all([d > 0 for d in distance_list])
     max_distance = max(distance_list)
+    assert max_distance > 0
     return max_distance
 
 
