@@ -113,7 +113,6 @@ def cnt2b(cnt, V):
 def read_cache_latency():
     cache_latency = []
     with open('cache_latency.txt', 'r') as fin:
-        fin.readline()
         for line in fin:
             content = line.strip().split('|')
             cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
@@ -172,6 +171,7 @@ def get_latency_profile(V, c, b, cache, debug=False):
                 if dist(cnt, i[0]) == 0:
                     print('using cache!')
                     return i[1]
+            print('no cache found!')
 
         v = V[np.array(b, dtype=bool)]
         model_list = []

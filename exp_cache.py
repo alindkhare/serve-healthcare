@@ -78,7 +78,7 @@ def b_cache():
 def cnt_cache_latency(cache):
 
     outname = 'cache_latency.txt'
-    V, c = get_description_small(n_gpu=2, n_patients=1)
+    V, c = get_description_small(n_gpu=1, n_patients=1)
 
     # 1 model
     for i1 in range(4):
@@ -108,7 +108,10 @@ def cnt_cache_accuracy():
 
 if __name__ == "__main__":
 
-    # cache_latency = read_cache_latency()
-    # cnt_cache(cache_latency)
+    cache_latency = read_cache_latency()
+    cnt_cache_latency(cache=cache_latency)
 
-    cnt_cache_latency(None)
+    # the biggest
+    # V, c = get_description_small(n_gpu=1, n_patients=1)
+    # b = [1] * 12
+    # final_res = get_latency_profile(V, c, b, cache=None)
