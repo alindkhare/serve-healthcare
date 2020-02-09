@@ -80,7 +80,7 @@ def b2cnt(b, V):
     cnter = Counter(tmp_m)
     for k, v in cnter.items():
         cnt[k] = v
-    print('b: ', b, 'cnt: ', cnt)
+    # print('b: ', b, 'cnt: ', cnt)
     return cnt
 
 def cnt2b(cnt, V):
@@ -160,44 +160,43 @@ def get_latency_profile(V, c, b, cache, debug=False):
     """
     print('profiling latency: ', b)
 
-    # return np.random.rand()
+    cnt = b2cnt(b, V)
 
     if debug:
-        return 1e-3*np.random.rand()
+        final_latency = 1e-3*np.random.rand()
     if np.sum(b) == 0:
-        return 0.0
+        final_latency = 0.0
+    else:
+        if cache is not None:
+            for i in cache:
+                if dist(cnt, i[0]) == 0:
+                    print('using cache!')
+                    return i[1]
 
-    if cache is not None:
-        cnt = b2cnt(b, V)
-        for i in cache:
-            if dist(cnt, i[0]) == 0:
-                print('using cache!')
-                return i[1]
+        v = V[np.array(b, dtype=bool)]
+        model_list = []
+        for i_model in v:
+            base_filters, n_block = int(i_model[0]), int(i_model[1])
+            model_list.append(get_model(base_filters, n_block))
 
-    v = V[np.array(b, dtype=bool)]
-    model_list = []
-    for i_model in v:
-        base_filters, n_block = int(i_model[0]), int(i_model[1])
-        print(base_filters, n_block)
-        model_list.append(get_model(base_filters, n_block))
+        filename = "profile_results.jsonl"
+        p = Path(filename)
+        p.touch()
+        os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
+        file_path = Path(filename)
+        system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
+        print(system_constraint)
+        # final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+        try:
+            final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+        except:
+            final_latency = 1e6 # set a big number to represent fail
 
-    filename = "profile_results.jsonl"
-    p = Path(filename)
-    p.touch()
-    os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
-    file_path = Path(filename)
-    system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
-    print(system_constraint)
-    final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
-    # try:
-    #     final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
-    # except:
-    #     final_latency = 1e2
+        if cache is not None:
+            cache.append([list(cnt), final_latency])
 
-    if cache is not None:
-        cache.append([list(b), final_latency])
         with open('cache_latency.txt', 'a') as fout:
-            fout.write('{}|{}|{}\n'.format(get_now(), list(b), final_latency))
+            fout.write('{}|{}|{}\n'.format(get_now(), list(cnt), final_latency))
 
     return final_latency
 
@@ -261,16 +260,15 @@ def plot_accuracy_latency():
 
 if __name__ == "__main__":
 
-    # V, c = get_description(1,1)
-    # b = [0,1,1] + [0]*17 + [0,1,1] + [0]*17 + [0] * 20
-    # cnt = [0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    # print(b2cnt(b, V))
-    # print(cnt2b(cnt, V))
+    V, c = get_description(1,1)
+    b = [0,1,1] + [0]*17 + [0,1,1] + [0]*17 + [0] * 20
+    cnt = [0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    print(b2cnt(b, V))
+    print(cnt2b(cnt, V))
 
     V, c = get_description_small(1,1)
-    b = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
-    # cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0]
-    # print(b2cnt(b, V))
-    # print(cnt2b(cnt, V))
-
-    get_latency_profile(V, c, b, cache=None, debug=False)
+    b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
+    cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0]
+    print(b2cnt(b, V))
+    print(cnt2b(cnt, V))
+    
