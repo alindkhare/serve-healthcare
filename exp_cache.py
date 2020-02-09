@@ -84,7 +84,7 @@ def cnt_cache(cache):
     for i1 in range(4):
         for i2 in range(4):
             for i3 in range(4):
-                for i4 in range(3):
+                for i4 in range(4):
                     cnt = [0]*16 + [i1, i2, i3, i4]
                     b = cnt2b(cnt, V)
                     tmp_latency = get_latency_profile(V, c, b, cache=cache)
