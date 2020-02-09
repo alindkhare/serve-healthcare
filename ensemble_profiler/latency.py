@@ -55,7 +55,8 @@ def profile_ensemble(model_list, file_path,
         gpu = int(constraint["gpu"])
         ray.init(object_store_memory=1000000000,
                  _internal_config=json.dumps(
-                     {"raylet_reconstruction_timeout_milliseconds": 1000000}))
+                     {"raylet_reconstruction_timeout_milliseconds": 1000000000,
+                      "initial_reconstruction_timeout_milliseconds": 1000000000}))
         serve.init(blocking=True, http_port=5000)
         nursery_handle = start_nursery()
         if not os.path.exists(str(file_path.resolve())):
