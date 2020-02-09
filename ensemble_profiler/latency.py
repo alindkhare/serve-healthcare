@@ -53,6 +53,8 @@ def profile_ensemble(model_list, file_path,
         # read constraint
         num_patients = int(constraint["npatient"])
         gpu = int(constraint["gpu"])
+        ray.init(_internal_config=json.dumps(
+            {"raylet_reconstruction_timeout_milliseconds": 1000000}))
         serve.init(blocking=True, http_port=5000)
         nursery_handle = start_nursery()
         if not os.path.exists(str(file_path.resolve())):
