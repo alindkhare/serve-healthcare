@@ -62,7 +62,7 @@ def get_description_small(n_gpu, n_patients):
 
     df = pd.read_csv('model_list_small.csv')
     print('model description:\n', df)
-    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx']].values
+    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx', 'macs']].values
     c = np.array([n_gpu, n_patients])
     print(V)
 
@@ -75,7 +75,7 @@ def b2cnt(b, V):
     cnt: count list. length 20, used for store cache. above case: [0,2,2]+[0]*17. 
     """
     cnt = [0 for _ in range(20)]
-    m = V[:,-1]
+    m = V[:,2]
     tmp_m = np.array(m)[np.array(b, dtype=bool)]
     cnter = Counter(tmp_m)
     for k, v in cnter.items():
@@ -91,7 +91,7 @@ def cnt2b(cnt, V):
 
     NOTE: this func is only used for precompute cache, since we don't know which model is counted
     """
-    m = list(V[:,-1])
+    m = list(V[:,2])
     b = [0 for _ in range(len(m))]
     cnter = dict(zip(list(range(20)), cnt))
     for k, v in cnter.items():
@@ -110,9 +110,20 @@ def cnt2b(cnt, V):
             b[indices[2]] = 1
     return b
 
+def read_cache_accuracy():
+    cache_accuracy = []
+    with open('cache_accuracy.txt', 'r') as fin:
+        for line in fin:
+            content = line.strip().split('|')
+            cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
+            accuracy = np.array([int(float(i)) for i in content[2].replace('(', '').replace(')', '').split(',')])
+            print(content)
+            cache_accuracy.append([cnt, accuracy])
+    return cache_accuracy
+
 def read_cache_latency():
     cache_latency = []
-    with open('cache_latency.txt', 'r') as fin:
+    with open('cache_latency_125hz.txt', 'r') as fin:
         for line in fin:
             content = line.strip().split('|')
             cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
@@ -127,32 +138,38 @@ def dist(v1, v2):
     return np.sum(np.abs(np.array(v1) - np.array(v2)))
 
 # ------------------------------------------------------------------------------------------------
-def get_accuracy_profile(V, b, return_all=False):
+def get_accuracy_profile(V, b, cache, return_all=False):
     """
     choa
     """
     print('profiling accuracy: ', b)
-    # if return_all:
-    #     return np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand(),np.random.rand()
-    # else:
-    #     return np.random.rand()
+
+    cnt = b2cnt(b, V)
+    
+    if np.sum(b) == 0:
+        final_accuracy = (0,0,0,0,0,0,0,0,0,0,0,0)
+    else:
+        if cache is not None:
+            for i in cache:
+                if dist(cnt, i[0]) == 0:
+                    print('using cache!')
+                    print(i[1], i[1][0])
+                    if return_all:
+                        return i[1]
+                    else:
+                        return i[1][0]
+            print('no cache found!')
+
+        final_accuracy = evaluate_ensemble_models_per_patient(b)
+        if cache is not None:
+            cache.append([list(cnt), final_accuracy])
+        with open('cache_accuracy.txt', 'a') as fout:
+            fout.write('{}|{}|{}\n'.format(get_now(), list(cnt), final_accuracy))
 
     if return_all:
-        if np.sum(b) == 0:
-            return 0,0,0,0,0,0,0,0,0,0,0,0
-        else:
-            roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_per_patient(b)
-            return roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std
+        return final_accuracy
     else:
-        if np.sum(b) == 0:
-            return 0
-        else:
-            try:
-                roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_per_patient(b)
-                return roc_auc
-            except:
-                print(b)
-                return 0
+        final_accuracy[0]
 
 def get_latency_profile(V, c, b, cache, debug=False):
     """
@@ -258,15 +275,25 @@ def plot_accuracy_latency():
 
 if __name__ == "__main__":
 
-    V, c = get_description(1,1)
-    b = [0,1,1] + [0]*17 + [0,1,1] + [0]*17 + [0] * 20
-    cnt = [0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    print(b2cnt(b, V))
-    print(cnt2b(cnt, V))
+    # test b2cnt, cnt2b
+    # V, c = get_description(1,1)
+    # b = [0,1,1] + [0]*17 + [0,1,1] + [0]*17 + [0] * 20
+    # cnt = [0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    # print(b2cnt(b, V))
+    # print(cnt2b(cnt, V))
 
-    V, c = get_description_small(1,1)
-    b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
-    cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0]
-    print(b2cnt(b, V))
-    print(cnt2b(cnt, V))
+    # V, c = get_description_small(1,1)
+    # b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
+    # cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0]
+    # print(b2cnt(b, V))
+    # print(cnt2b(cnt, V))
     
+
+    # test get_accuracy_profile
+    # V, c = get_description_small(1,1)
+    # get_accuracy_profile
+
+
+    b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
+    a = evaluate_ensemble_models_per_patient(b)
+    print(a)

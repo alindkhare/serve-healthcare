@@ -80,7 +80,6 @@ def cnt_cache_latency(cache):
     outname = 'cache_latency.txt'
     V, c = get_description_small(n_gpu=1, n_patients=1)
 
-    # 1 model
     for i1 in range(4):
         for i2 in range(4):
             for i3 in range(4):
@@ -89,27 +88,26 @@ def cnt_cache_latency(cache):
                     b = cnt2b(cnt, V)
                     tmp_latency = get_latency_profile(V, c, b, cache=cache)
 
-def cnt_cache_accuracy():
+def cnt_cache_accuracy(cache):
 
     outname = 'cache_accuracy.txt'
     V, c = get_description_small(n_gpu=1, n_patients=1)
 
-    # 1 model
     for i1 in range(4):
         for i2 in range(4):
             for i3 in range(4):
                 for i4 in range(4):
                     cnt = [0]*16 + [i1, i2, i3, i4]
                     b = cnt2b(cnt, V)
-                    final_res = get_accuracy_profile(V, b, return_all=True)
-
-                    with open(outname, 'a') as fout:
-                        fout.write('{}|{}|{}\n'.format(get_now(), list(cnt), final_res))
+                    final_res = get_accuracy_profile(V, b, cache=cache, return_all=True)
 
 if __name__ == "__main__":
 
     cache_latency = read_cache_latency()
     cnt_cache_latency(cache=cache_latency)
+
+    # cache_accuracy = read_cache_accuracy()
+    # cnt_cache_accuracy(cache=cache_accuracy)
 
     # the biggest
     # V, c = get_description_small(n_gpu=1, n_patients=1)
