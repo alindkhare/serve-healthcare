@@ -268,7 +268,7 @@ def solve_opt_passive(V, c, L, lamda):
     if global_debug:
         N1 = 1
     else:
-        N1 = 20 # profile trials
+        N1 = 100 # profile trials
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -333,8 +333,8 @@ def solve_proxy(V, c, L, lamda):
         epoches = 1
     else:
         N1 = 0 # warm start
-        N2 = 500 # proxy
-        N3 = 2 # profile trials in each epoch
+        N2 = 1000 # proxy
+        N3 = 10 # profile trials in each epoch
         epoches = 10 # number of epoches
 
     # --------------------- initialization ---------------------
@@ -433,7 +433,7 @@ def solve_proxy(V, c, L, lamda):
 if __name__ == "__main__":
 
     global_debug = False
-    is_small = True
+    is_small = False
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     cache_latency = read_cache_latency()
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
-    L = 0.6 # maximum latency
+    L = 1 # maximum latency
     lamda = 1
     
     with open(log_name, 'w') as fout:
