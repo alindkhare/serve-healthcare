@@ -138,12 +138,12 @@ def get_accuracy_profile(V, b, cache, return_all=False):
         if cache is not None:
             for i in cache:
                 if dist(cnt, i[0]) == 0:
-                    print('using cache for {}!'.format(cnt))
+                    # print('using accuracy cache for {}!'.format(b))
                     if return_all:
                         return i[1]
                     else:
                         return i[1][0]
-            print('no cache found for {}!'.format(cnt))
+            print('no accuracy cache found for {}!'.format(b))
 
         final_accuracy = evaluate_ensemble_models_per_patient(b)
         if cache is not None:
@@ -171,9 +171,9 @@ def get_latency_profile(V, c, b, cache, debug=False):
         if cache is not None:
             for i in cache:
                 if dist(cnt, i[0]) == 0:
-                    print('using cache for {}!'.format(cnt))
+                    # print('using latencyy cache for {}!'.format(b))
                     return i[1]
-            print('no cache found for {}!'.format(cnt))
+            print('no latency cache found for {}!'.format(b))
 
         v = V[np.array(b, dtype=bool)]
         model_list = []

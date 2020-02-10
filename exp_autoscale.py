@@ -32,17 +32,18 @@ def explore_genetic(n_model, B, n_samples, p, p1, dist=3):
     n_samples_random = int(n_samples*(1-p))
     n_samples_mutation = int(n_samples*p*p1)
     n_samples_recombination = n_samples - n_samples_random - n_samples_mutation
+    print('n_samples_random:',n_samples_random,'n_samples_mutation:',n_samples_mutation,'n_samples_recombination:',n_samples_recombination)
 
     B_random = explore_random(n_model, B_local, n_samples_random)
-    # print(len(B_local))
+    # print('B', len(B_local))
     B_local = B_local + B_random
-    # print(len(B_local))
+    # print('B_random', len(B_local))
     B_mutation = explore_mutation(n_model, B_local, B_local, n_samples_mutation)
     B_local = B_local + B_mutation
-    # print(len(B_local))
+    # print('B_mutation', len(B_local))
     B_recombination = explore_recombination(n_model, B_local, n_samples_recombination)
     B_local = B_local + B_recombination
-    # print(len(B_local))
+    # print('B_recombination', len(B_local))
     return B_local
 
 def explore_random(n_model, B, n_samples):
@@ -54,30 +55,36 @@ def explore_random(n_model, B, n_samples):
     Output:
         B \in \{0,1\}^{n_samples \times n_model}
     """
-    max_n_model = 10
     out = []
     i = 0
     while i < n_samples:
-        # get a random probability of 1s and 0s
-        pp = (max_n_model/n_model)*np.random.rand()
-        # get random binary vector
-        tmp = np.random.choice([0, 1], size=n_model, p=(1-pp,pp))
+        flag = True
+        tmp = np.random.choice([0, 1], size=n_model)
         # dedup
+        for b in out:
+            if np.array_equal(tmp, b):
+                flag = False
+                break
         for b in B:
             if np.array_equal(tmp, b):
+                flag = False
                 break
-        out.append(list(tmp))
-        i += 1
+        if flag: # found a valid sample
+            out.append(list(tmp))
+            i += 1
     return out
 
-def explore_mutation(n_model, B_top, B, n_samples, dist=3):
+def explore_mutation(n_model, B_top, B, n_samples, dist=6):
     """
     """
+    print(len(B_top), len(B), n_samples)
     out = []
     i = 0
     while i < n_samples:
+        flag = True
         # get a random b from B_top
         tmp = B_top[np.random.choice(list(range(len(B_top))))]
+        tmp = copy.deepcopy(tmp)
         # random binary vector near dist, by random filp 3 digits
         for j in range(dist):
             idx = np.random.choice(list(range(n_model)))
@@ -86,29 +93,44 @@ def explore_mutation(n_model, B_top, B, n_samples, dist=3):
             else:
                 tmp[idx] = 0
         # dedup
+        for b in out:
+            if np.array_equal(tmp, b):
+                flag = False
+                break
         for b in B:
             if np.array_equal(tmp, b):
+                flag = False
                 break
-        out.append(list(tmp))
-        i += 1
+        if flag: # found a valid sample
+            out.append(list(tmp))
+            i += 1
     return out
 
 def explore_recombination(n_model, B, n_samples):
     out = []
     i = 0
     while i < n_samples:
+        flag = True
         # get a random int from 1 to n_model-2
         split_idx = np.random.randint(1, n_model-1)
         # random pick two of b from B
-        b1 = B[np.random.randint(0, len(B))]
-        b2 = B[np.random.randint(0, len(B))]
-        tmp = list(b1)[:split_idx] + list(b1)[split_idx:]
+        pick_idx1 = np.random.randint(0, len(B))
+        pick_idx2 = np.random.randint(0, len(B))
+        b1 = copy.deepcopy(B[pick_idx1])
+        b2 = copy.deepcopy(B[pick_idx2])
+        tmp = list(b1)[:split_idx] + list(b2)[split_idx:]
         # dedup
+        for b in out:
+            if np.array_equal(tmp, b):
+                flag = False
+                break
         for b in B:
             if np.array_equal(tmp, b):
+                flag = False
                 break
-        out.append(list(tmp))
-        i += 1
+        if flag: # found a valid sample
+            out.append(list(tmp))
+            i += 1
     return out
 
 # ---------------------------------------------------------------------------------------------------
@@ -239,7 +261,7 @@ def solve_opt_passive(V, c, L, lamda):
     if global_debug:
         N1 = 1
     else:
-        N1 = 20 # profile trials
+        N1 = 30 # profile trials
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -303,8 +325,8 @@ def solve_proxy(V, c, L, lamda):
         epoches = 1
     else:
         N1 = 0 # warm start
-        N2 = 1000 # proxy
-        N3 = 2 # profile trials in each epoch
+        N2 = 500 # proxy
+        N3 = 3 # profile trials in each epoch
         epoches = 10 # number of epoches
 
     # --------------------- initialization ---------------------
@@ -338,7 +360,7 @@ def solve_proxy(V, c, L, lamda):
         Y_accuracy.append(get_accuracy_profile(V, b, cache=cache_accuracy))
         tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
         Y_latency.append(tmp_latency)
-        print('latency: ', Y_latency[-1])
+        # print('latency: ', Y_latency[-1])
         all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L, soft=False))
     tmp_opt_idx = np.argmax(np.nan_to_num(all_obj))
     write_traj(V, c, B[tmp_opt_idx], 'solve_proxy')
@@ -358,7 +380,7 @@ def solve_proxy(V, c, L, lamda):
 
         # genetic explore
         # random: 1-p, mutation: p*p1
-        B_bar = explore_genetic(n_model=n_model, B=B, n_samples=N2, p=0.1, p1=0.5)
+        B_bar = explore_genetic(n_model=n_model, B=B, n_samples=N2, p=0.5, p1=0.5)
         # print('len(B_bar): ', len(B_bar))
         pred_accuracy = accuracy_predictor.predict(np.array(B_bar))
         pred_latency = latency_predictor.predict(np.array(B_bar))
@@ -367,6 +389,8 @@ def solve_proxy(V, c, L, lamda):
             all_obj.append(get_obj(pred_accuracy[i], pred_latency[i], lamda, L, soft=False))
         top_idx = np.argsort(all_obj)[::-1][:N3]
         B_0 = list(np.array(B_bar)[top_idx])
+        for i in range(len(B_0)):
+            print(top_idx[i], B_0[i])
         # print('len(B_0): ', len(B_0))
 
         # profile
