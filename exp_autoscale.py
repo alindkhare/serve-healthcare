@@ -29,22 +29,30 @@ def explore_genetic(n_model, B, n_samples, p, p1, dist=3):
         B \in \{0,1\}^{n_samples \times n_model}
     """
     B_local = copy.deepcopy(B)
+    B_out = []
     n_samples_random = int(n_samples*(1-p))
     n_samples_mutation = int(n_samples*p*p1)
     n_samples_recombination = n_samples - n_samples_random - n_samples_mutation
-    print('n_samples_random:',n_samples_random,'n_samples_mutation:',n_samples_mutation,'n_samples_recombination:',n_samples_recombination)
+    # print('n_samples_random:',n_samples_random,'n_samples_mutation:',n_samples_mutation,'n_samples_recombination:',n_samples_recombination)
 
-    B_random = explore_random(n_model, B_local, n_samples_random)
     # print('B', len(B_local))
+    B_random = explore_random(n_model, B_local, n_samples_random)
+    # print(np.array(B_random))
     B_local = B_local + B_random
+    B_out = B_out + B_random
     # print('B_random', len(B_local))
     B_mutation = explore_mutation(n_model, B_local, B_local, n_samples_mutation)
+    # print(np.array(B_mutation))
     B_local = B_local + B_mutation
+    B_out = B_out + B_mutation
     # print('B_mutation', len(B_local))
     B_recombination = explore_recombination(n_model, B_local, n_samples_recombination)
+    # print(np.array(B_recombination))
     B_local = B_local + B_recombination
+    B_out = B_out + B_recombination
     # print('B_recombination', len(B_local))
-    return B_local
+    # print(np.array(B_local))
+    return B_out
 
 def explore_random(n_model, B, n_samples):
     """
@@ -77,7 +85,6 @@ def explore_random(n_model, B, n_samples):
 def explore_mutation(n_model, B_top, B, n_samples, dist=6):
     """
     """
-    print(len(B_top), len(B), n_samples)
     out = []
     i = 0
     while i < n_samples:
@@ -151,7 +158,7 @@ def write_res(V, c, b, method):
     latency = get_latency_profile(V, c, b, cache=cache_latency)
 
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
 
 def write_traj(V, c, b, method):
     """
@@ -162,7 +169,7 @@ def write_traj(V, c, b, method):
     latency = get_latency_profile(V, c, b, cache=cache_latency)
 
     with open(traj_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
 
 ##################################################################################################
 # naive
@@ -261,13 +268,14 @@ def solve_opt_passive(V, c, L, lamda):
     if global_debug:
         N1 = 1
     else:
-        N1 = 30 # profile trials
+        N1 = 20 # profile trials
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
     try:
         B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
-        print('warm init success', B)
+        print('warm init success')
+        # print(B)
     except:
         print('warm init failed')
         if global_debug:
@@ -326,14 +334,15 @@ def solve_proxy(V, c, L, lamda):
     else:
         N1 = 0 # warm start
         N2 = 500 # proxy
-        N3 = 3 # profile trials in each epoch
+        N3 = 2 # profile trials in each epoch
         epoches = 10 # number of epoches
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
     try:
         B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
-        print('warm init success', B)
+        print('warm init success')
+        # print(B)
     except:
         print('warm init failed')
         if global_debug:
@@ -389,8 +398,8 @@ def solve_proxy(V, c, L, lamda):
             all_obj.append(get_obj(pred_accuracy[i], pred_latency[i], lamda, L, soft=False))
         top_idx = np.argsort(all_obj)[::-1][:N3]
         B_0 = list(np.array(B_bar)[top_idx])
-        for i in range(len(B_0)):
-            print(top_idx[i], B_0[i])
+        # for i in range(len(B_0)):
+        #     print(top_idx[i], B_0[i])
         # print('len(B_0): ', len(B_0))
 
         # profile
