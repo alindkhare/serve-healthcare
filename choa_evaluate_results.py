@@ -14,7 +14,7 @@ def ReadLines(file, n=3000):
                 break
     return list_files
 
-pred_dir = 'choa_pred_results/'
+pred_dir = '../waveforms/'
 
 true_labels = np.loadtxt(pred_dir + 'labels.txt')
 model_list = ReadLines(pred_dir + 'model_list.txt')
@@ -148,14 +148,17 @@ def evaluate_ensemble_models_with_history_per_patient(b, obs_w_30sec=1, debug=Fa
 
 if __name__ == "__main__":
 
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_per_patient(b = [1,1], debug=True)
+    b = [np.random.randint(2) for _ in range(20)]
+    print(b)
+
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_per_patient(b = b, debug=True)
 
     print(roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std)
 
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_with_history_per_patient(b=[1,1], obs_w_30sec=1, debug=True)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, debug=True)
 
     print(roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std)
 
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_with_history_per_patient(b=[1,1], obs_w_30sec=10, debug=True)
+    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std = evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=10, debug=True)
 
     print(roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy, accuracy_std)

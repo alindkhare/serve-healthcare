@@ -5,7 +5,7 @@ import pickle
 import random
 from tqdm import tqdm
 
-from util import my_eval, get_accuracy_profile, get_latency_profile, get_description, get_description_small, get_now, b2cnt, cnt2b, read_cache_latency
+from util import my_eval, get_accuracy_profile, get_latency_profile, get_description, get_now, b2cnt, cnt2b, read_cache_latency
 
 def b_cache():
 
@@ -13,7 +13,7 @@ def b_cache():
     # with open(outname, 'w') as fout:
     #     fout.write(get_now()+'\n')
     
-    V, c = get_description_small(n_gpu=1, n_patients=1)
+    V, c = get_description(n_gpu=1, n_patients=1, is_small=True)
 
     # 1 model
     for i1 in range(n_model):
@@ -78,7 +78,7 @@ def b_cache():
 def cnt_cache_latency(cache):
 
     outname = 'cache_latency.txt'
-    V, c = get_description_small(n_gpu=1, n_patients=1)
+    V, c = get_description(n_gpu=1, n_patients=1, is_small=True)
 
     for i1 in range(4):
         for i2 in range(4):
@@ -91,7 +91,7 @@ def cnt_cache_latency(cache):
 def cnt_cache_accuracy(cache):
 
     outname = 'cache_accuracy.txt'
-    V, c = get_description_small(n_gpu=1, n_patients=1)
+    V, c = get_description(n_gpu=1, n_patients=1, is_small=True)
 
     for i1 in range(4):
         for i2 in range(4):
@@ -110,6 +110,6 @@ if __name__ == "__main__":
     # cnt_cache_accuracy(cache=cache_accuracy)
 
     # the biggest
-    # V, c = get_description_small(n_gpu=1, n_patients=1)
+    # V, c = get_description(n_gpu=1, n_patients=1, is_small=True)
     # b = [1] * 12
     # final_res = get_latency_profile(V, c, b, cache=None)

@@ -13,7 +13,7 @@ from tqdm import tqdm
 from datetime import datetime
 import copy
 
-from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, read_cache_accuracy, get_description, get_description_small
+from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, read_cache_accuracy, get_description
 
 ##################################################################################################
 # tools
@@ -159,8 +159,7 @@ def solve_random(V, c, L, lamda):
         tmp_idx = np.random.choice(idx_all)
         idx_all.remove(tmp_idx)
         b[tmp_idx] = 1
-        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-        latency = np.percentile(tmp_latency, 95)
+        latency = get_latency_profile(V, c, b, cache=cache_latency)
         print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
@@ -185,8 +184,7 @@ def solve_greedy_accuracy(V, c, L, lamda):
     for i in range(n_model):
         tmp_idx = idx_order[i]
         b[tmp_idx] = 1
-        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-        latency = np.percentile(tmp_latency, 95)
+        latency = get_latency_profile(V, c, b, cache=cache_latency)
         print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
@@ -212,8 +210,7 @@ def solve_greedy_latency(V, c, L, lamda):
     for i in range(n_model):
         tmp_idx = idx_order[i]
         b[tmp_idx] = 1
-        tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-        latency = np.percentile(tmp_latency, 95)
+        latency = get_latency_profile(V, c, b, cache=cache_latency)
         print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
@@ -242,7 +239,7 @@ def solve_opt_passive(V, c, L, lamda):
     if global_debug:
         N1 = 1
     else:
-        N1 = 100 # warm start
+        N1 = 20 # profile trials
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -259,29 +256,29 @@ def solve_opt_passive(V, c, L, lamda):
             opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
             B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
     Y_accuracy = []
-    all_latency = []
     Y_latency = []
 
-    res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency, 'all_latency':all_latency}
+    res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency}
 
     # --------------------- (1) warm start ---------------------
     B = B + explore_random(n_model=n_model, B=B, n_samples=N1)
     # profile
     for b in tqdm(B):
-        Y_accuracy.append(get_accuracy_profile(V, b, cache=cache_accuracy))
+        tmp_accuracy = get_accuracy_profile(V, b, cache=cache_accuracy)
+        Y_accuracy.append(tmp_accuracy)
         tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-        all_latency.append(tmp_latency)
-        Y_latency.append(np.percentile(tmp_latency, 95))
-        print('latency: ', Y_latency[-1])
+        Y_latency.append(tmp_latency)
+        write_traj(V, c, b, 'solve_opt_passive')
 
     # --------------------- (3) solve ---------------------
     all_obj = []
     for i in range(len(B)):
-        all_obj.append(get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False))
-    print(all_obj)
+        tmp = get_obj(Y_accuracy[i], Y_latency[i], lamda, L, soft=False)
+        all_obj.append(tmp)
+    # print(all_obj)
     opt_idx = np.argmax(np.nan_to_num(all_obj))
     opt_b = B[opt_idx]
-    write_traj(V, c, opt_b, 'solve_opt_passive')
+    
     write_res(V, c, opt_b, 'solve_opt_passive')
 
     return opt_b
@@ -305,10 +302,10 @@ def solve_proxy(V, c, L, lamda):
         N3 = 3 # profile
         epoches = 1
     else:
-        N1 = 100 # warm start
+        N1 = 0 # warm start
         N2 = 1000 # proxy
-        N3 = 30 # profile
-        epoches = 10
+        N3 = 2 # profile trials in each epoch
+        epoches = 10 # number of epoches
 
     # --------------------- initialization ---------------------
     n_model = V.shape[0]
@@ -325,9 +322,8 @@ def solve_proxy(V, c, L, lamda):
             opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
             B = [opt_b_solve_random, opt_b_solve_greedy_accuracy, opt_b_solve_greedy_latency]
     Y_accuracy = []
-    all_latency = []
     Y_latency = []
-    res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency, 'all_latency':all_latency}
+    res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency}
     accuracy_predictor = RF()
     latency_predictor = RF()
     # print('len(B): ', len(B))
@@ -341,8 +337,7 @@ def solve_proxy(V, c, L, lamda):
     for b in tqdm(B):
         Y_accuracy.append(get_accuracy_profile(V, b, cache=cache_accuracy))
         tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-        all_latency.append(tmp_latency)
-        Y_latency.append(np.percentile(tmp_latency, 95))
+        Y_latency.append(tmp_latency)
         print('latency: ', Y_latency[-1])
         all_obj.append(get_obj(Y_accuracy[-1], Y_latency[-1], lamda, L, soft=False))
     tmp_opt_idx = np.argmax(np.nan_to_num(all_obj))
@@ -361,9 +356,9 @@ def solve_proxy(V, c, L, lamda):
         print(my_eval(Y_accuracy, pred_accuracy))
         print(my_eval(Y_latency, pred_latency))
 
-        # search
-        # random sample a large
-        B_bar = explore_genetic(n_model=n_model, B=B, n_samples=N2, p=0.5, p1=0.5)
+        # genetic explore
+        # random: 1-p, mutation: p*p1
+        B_bar = explore_genetic(n_model=n_model, B=B, n_samples=N2, p=0.1, p1=0.5)
         # print('len(B_bar): ', len(B_bar))
         pred_accuracy = accuracy_predictor.predict(np.array(B_bar))
         pred_latency = latency_predictor.predict(np.array(B_bar))
@@ -375,14 +370,13 @@ def solve_proxy(V, c, L, lamda):
         # print('len(B_0): ', len(B_0))
 
         # profile
-        for b in tqdm(B_0):
+        for b in B_0:
             # get_accuracy_profile
             Y_accuracy.append(get_accuracy_profile(V, b, cache=cache_accuracy))
             # get_latency_profile
             tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
-            all_latency.append(tmp_latency)
-            Y_latency.append(np.percentile(tmp_latency, 95))
-            print('latency: ', Y_latency[-1])
+            Y_latency.append(tmp_latency)
+            # print('latency: ', Y_latency[-1])
 
         B = B + B_0
         # print('len(B) after epoch: ', len(B))
@@ -405,22 +399,22 @@ def solve_proxy(V, c, L, lamda):
 
 if __name__ == "__main__":
 
-    global_debug = True
+    global_debug = False
+    is_small = True
+
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     cache_latency = read_cache_latency()
     cache_accuracy = read_cache_accuracy()
-    exit()
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
     L = 0.6 # maximum latency
     lamda = 1
-    n_patients_list = [1]
     
     with open(log_name, 'w') as fout:
         fout.write(current_time+'\n')
     
-    V, c = get_description_small(n_gpu=1, n_patients=1)
+    V, c = get_description(n_gpu=1, n_patients=1, is_small=is_small)
     print('model description:\n', V, '\nsystem description:', c)
 
     # # ---------- naive solutions ----------

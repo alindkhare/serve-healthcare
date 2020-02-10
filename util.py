@@ -36,7 +36,7 @@ def get_model(base_filters, n_block):
     # print(model.get_info())
     return model
 
-def get_description(n_gpu, n_patients):
+def get_description(n_gpu, n_patients, is_small=False):
     """
     return V and c
 
@@ -44,23 +44,10 @@ def get_description(n_gpu, n_patients):
     c: n_gpu, n_patients
     """
 
-    df = pd.read_csv('model_list.csv')
-    print('model description:\n', df)
-    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx']].values
-    c = np.array([n_gpu, n_patients])
-    print(V)
-
-    return V, c
-
-def get_description_small(n_gpu, n_patients):
-    """
-    return V and c
-
-    V: base_filters, n_block, accuracy, flops, size
-    c: n_gpu, n_patients
-    """
-
-    df = pd.read_csv('model_list_small.csv')
+    if is_small:
+        df = pd.read_csv('model_list_small.csv')
+    else:
+        df = pd.read_csv('model_list.csv')
     print('model description:\n', df)
     V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx', 'macs']].values
     c = np.array([n_gpu, n_patients])
@@ -116,14 +103,13 @@ def read_cache_accuracy():
         for line in fin:
             content = line.strip().split('|')
             cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
-            accuracy = np.array([int(float(i)) for i in content[2].replace('(', '').replace(')', '').split(',')])
-            print(content)
+            accuracy = np.array([float(i.strip()) for i in content[2].replace('(', '').replace(')', '').split(',')])
             cache_accuracy.append([cnt, accuracy])
     return cache_accuracy
 
 def read_cache_latency():
     cache_latency = []
-    with open('cache_latency_125hz.txt', 'r') as fin:
+    with open('cache_latency.txt', 'r') as fin:
         for line in fin:
             content = line.strip().split('|')
             cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
@@ -142,23 +128,22 @@ def get_accuracy_profile(V, b, cache, return_all=False):
     """
     choa
     """
-    print('profiling accuracy: ', b)
+    # print('profiling accuracy: ', b)
 
     cnt = b2cnt(b, V)
     
     if np.sum(b) == 0:
-        final_accuracy = (0,0,0,0,0,0,0,0,0,0,0,0)
+        final_accuracy = [0,0,0,0,0,0,0,0,0,0,0,0]
     else:
         if cache is not None:
             for i in cache:
                 if dist(cnt, i[0]) == 0:
-                    print('using cache!')
-                    print(i[1], i[1][0])
+                    print('using cache for {}!'.format(cnt))
                     if return_all:
                         return i[1]
                     else:
                         return i[1][0]
-            print('no cache found!')
+            print('no cache found for {}!'.format(cnt))
 
         final_accuracy = evaluate_ensemble_models_per_patient(b)
         if cache is not None:
@@ -169,12 +154,12 @@ def get_accuracy_profile(V, b, cache, return_all=False):
     if return_all:
         return final_accuracy
     else:
-        final_accuracy[0]
+        return final_accuracy[0]
 
 def get_latency_profile(V, c, b, cache, debug=False):
     """
     """
-    print('profiling latency: ', b)
+    # print('profiling latency: ', b)
 
     cnt = b2cnt(b, V)
 
@@ -186,9 +171,9 @@ def get_latency_profile(V, c, b, cache, debug=False):
         if cache is not None:
             for i in cache:
                 if dist(cnt, i[0]) == 0:
-                    print('using cache!')
+                    print('using cache for {}!'.format(cnt))
                     return i[1]
-            print('no cache found!')
+            print('no cache found for {}!'.format(cnt))
 
         v = V[np.array(b, dtype=bool)]
         model_list = []
@@ -282,7 +267,7 @@ if __name__ == "__main__":
     # print(b2cnt(b, V))
     # print(cnt2b(cnt, V))
 
-    # V, c = get_description_small(1,1)
+    # V, c = get_description(1,1, is_small=True)
     # b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
     # cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0]
     # print(b2cnt(b, V))
@@ -290,7 +275,7 @@ if __name__ == "__main__":
     
 
     # test get_accuracy_profile
-    # V, c = get_description_small(1,1)
+    # V, c = get_description(1,1, is_small=True)
     # get_accuracy_profile
 
 
