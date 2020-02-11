@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
+from sklearn.metrics import roc_auc_score,f1_score,recall_score,precision_score,precision_recall_curve,auc,accuracy_score
 
 def read_res(log_fname, traj_fname):
     # read log
