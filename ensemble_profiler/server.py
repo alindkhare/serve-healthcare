@@ -195,7 +195,7 @@ class HTTPProxy:
         flask_request = build_flask_request(scope, http_body_bytes)
         info = {
             "patient_name": flask_request.args.get("patient_name"),
-            "value": float(flask_request.args.get("value")),
+            "value": flask_request.args.getlist("value"),
             "vtype": flask_request.args.get("vtype")
         }
         if info["patient_name"] not in self.actor_handles:
