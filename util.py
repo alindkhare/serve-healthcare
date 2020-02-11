@@ -188,7 +188,11 @@ def get_latency_profile(V, c, b, cache, debug=False):
         file_path = Path(filename)
         system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
         print(system_constraint)
-        final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+        try:
+            final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+        except Exception as e:
+            print(e)
+            final_latency = 1e6
         if final_latency is None:
             final_latency = 1e6
 
