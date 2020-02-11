@@ -193,7 +193,8 @@ def get_latency_profile(V, c, b, cache, debug=False):
             total_size += i_model[3]
             model_list.append(get_model(base_filters, n_block))
 
-        if total_size/1024 > 30:
+        if total_size/1024 > 25:
+            print('The model is too big: {} GB'.format(total_size/1024))
             final_latency = 1e6 # set too large 1e6
         else:
             filename = "profile_results.jsonl"
@@ -270,11 +271,10 @@ if __name__ == "__main__":
     
 
     # test get_accuracy_profile
-    b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
-    V, c = get_description(1,1, is_small=True)
-    get_accuracy_profile(V, b, cache=None)
-
-
     # b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
-    # a = evaluate_ensemble_models_per_patient(b)
-    # print(a)
+    b = [0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]
+
+    V, c = get_description(1,1, is_small=False)
+    # get_accuracy_profile(V, b, cache=None)
+    get_latency_profile(V, c, b, cache=None)
+

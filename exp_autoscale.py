@@ -2,13 +2,10 @@
 
 """
 
-
-
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor as RF
 import pickle
-import random
 from tqdm import tqdm
 from datetime import datetime
 import copy
@@ -355,8 +352,8 @@ def solve_proxy(V, c, L, lamda):
     Y_accuracy = []
     Y_latency = []
     res = {'B':B, 'Y_accuracy':Y_accuracy, 'Y_latency':Y_latency}
-    accuracy_predictor = RF()
-    latency_predictor = RF()
+    accuracy_predictor = RF(random_state=0)
+    latency_predictor = RF(random_state=0)
     # print('len(B): ', len(B))
 
     # --------------------- (1) warm start ---------------------
@@ -379,13 +376,23 @@ def solve_proxy(V, c, L, lamda):
     for i_epoches in tqdm(range(epoches)):
 
         # fit proxy
-        accuracy_predictor.fit(B, Y_accuracy)
-        latency_predictor.fit(B, Y_latency)
+        ## remove too large latency
+        B_proxy = []
+        Y_accuracy_proxy = []
+        Y_latency_proxy = []
+        for ii in range(len(Y_latency)):
+            if Y_latency[ii] < 1e5:
+                B_proxy.append(B[ii])
+                Y_accuracy_proxy.append(Y_accuracy[ii])
+                Y_latency_proxy.append(Y_latency[ii])
+        print('remove {} too large latency profile'.format(len(B) - len(B_proxy)))
+        accuracy_predictor.fit(B_proxy, Y_accuracy_proxy)
+        latency_predictor.fit(B_proxy, Y_latency_proxy)
 
-        pred_accuracy = accuracy_predictor.predict(B)
-        pred_latency = latency_predictor.predict(B)
-        print(my_eval(Y_accuracy, pred_accuracy))
-        print(my_eval(Y_latency, pred_latency))
+        pred_accuracy = accuracy_predictor.predict(B_proxy)
+        pred_latency = latency_predictor.predict(B_proxy)
+        print(my_eval(Y_accuracy_proxy, pred_accuracy))
+        print(my_eval(Y_latency_proxy, pred_latency))
 
         # genetic explore
         # random: 1-p, mutation: p*p1
@@ -432,7 +439,9 @@ def solve_proxy(V, c, L, lamda):
 
 if __name__ == "__main__":
 
-    global_debug = True
+    np.random.seed(0)
+
+    global_debug = False
     is_small = False
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
