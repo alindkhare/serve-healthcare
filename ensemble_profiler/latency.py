@@ -5,7 +5,9 @@ from ensemble_profiler.utils import *
 import time
 from ensemble_profiler.server import HTTPActor
 import subprocess
-from ensemble_profiler.constants import ROUTE_ADDRESS, PROFILE_ENSEMBLE, PREDITICATE_INTERVAL
+from ensemble_profiler.constants import (ROUTE_ADDRESS, PROFILE_ENSEMBLE,
+                                         PREDITICATE_INTERVAL)
+
 from ensemble_profiler.tq_simulator import find_tq
 import time
 from threading import Event
@@ -175,7 +177,7 @@ def fire_remote_clients(url, req_params):
 
 def warmup_gpu(pipeline, warmup):
     print("warmup GPU")
-    total_data_request = 3750
+    total_data_request = PREDITICATE_INTERVAL
     for _ in range(warmup):
         ray.get(pipeline.remote(data=torch.zeros(1, 1, total_data_request)))
     print("finish warming up GPU by firing torch zero {} times".format(warmup))
