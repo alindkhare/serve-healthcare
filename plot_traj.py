@@ -55,12 +55,13 @@ def plot_fig1_intro():
     ax[0].set_ylim([0.4,0.6])
     ax[1].grid()
     ax[1].set_axisbelow(True)
-    ax[1].bar(methods, log_accuracy[:,0], color=colors)
+    ax[1].bar(methods, log_accuracy[:,2], color=colors)
     ax[1].set_yticks(np.arange(0, 1, 0.01))
-    ax[1].set_ylim([0.955,0.98])
-    ax[1].set_ylabel('Accuracy (ROC-AUC)')
+    ax[1].set_ylim([0.92,0.96])
+    # ax[1].set_ylim([0.955,0.98])
+    ax[1].set_ylabel('ROC-AUC')
     plt.tight_layout()
-    plt.savefig('img/intro.png')
+    plt.savefig('img/intro.pdf')
 
 def get_traj(x, y, m):
     out_x = []
@@ -105,42 +106,43 @@ def plot_fig4_fig5_explore():
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
         plt.scatter(plot_traj_x, plot_traj_y, c=colors[i])
-        plt.plot(plot_traj_x, plot_traj_y, c=colors[i], linewidth=2)
+        plt.plot(plot_traj_x, plot_traj_y, marker=markers[i], c=colors[i], linewidth=2)
     plt.legend(methods)
-    plt.xlabel('Latency')
-    plt.ylabel('Accuracy')
+    plt.xlabel('Latency (seconds)')
+    plt.ylabel('ROC-AUC')
     plt.tight_layout()
-    plt.savefig('img/explore.png')
+    plt.savefig('img/explore.pdf')
 
     plt.figure(figsize=(4,3))
     plt.yticks(np.arange(0, 1, 0.2))
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
-        plt.plot(plot_traj_x, c=colors[i], linewidth=2)
+        plt.plot(plot_traj_x, marker=markers[i], c=colors[i], linewidth=2)
     plt.legend(methods)
     plt.xlabel('Number of Explore')
-    plt.ylabel('Latency')
+    plt.ylabel('Latency (seconds)')
     plt.tight_layout()
-    plt.savefig('img/explore_latency.png')
+    plt.savefig('img/explore_latency.pdf')
 
     plt.figure(figsize=(4,3))
     plt.yticks(np.arange(0, 1, 0.05))
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
-        plt.plot(plot_traj_y, c=colors[i], linewidth=2)
+        plt.plot(plot_traj_y, marker=markers[i], c=colors[i], linewidth=2)
     plt.legend(methods)
     plt.xlabel('Number of Explore')
-    plt.ylabel('Accuracy')
+    plt.ylabel('ROC-AUC')
     plt.tight_layout()
-    plt.savefig('img/explore_accuracy.png')
+    plt.savefig('img/explore_accuracy.pdf')
 
 if __name__ == "__main__":
 
-    methods = ['RD', 'GA', 'GL', 'BO', 'Ours']
+    methods = ['RD', 'GA', 'GL', 'BO', 'HOLMES']
     colors = ['#233D4D', 'tab:gray', '#48A9A6', '#2F6690', '#F9592C']
     # colors = ['#247BA0', '#70C1B3', '#B2DBBF', '#F3FFBD', '#FF1654']
+    markers = ['v', '^', 'd', 's', 'o']
 
     log_fname = 'res/log_20200210_172950.txt'
     traj_fname = 'res/traj_20200210_172950.txt'

@@ -35,6 +35,7 @@ def b_cache_accuracy(cache):
 
 def precompute():
 
+    out_fname = 'precompute.txt'
     V, c = get_description(n_gpu=1, n_patients=1, is_small=False)
     n_model = V.shape[0]
     for i in range(n_model):
@@ -42,12 +43,13 @@ def precompute():
         b[i] = 1
         tmp_accuracy = get_accuracy_profile(V, b, cache=None)
         tmp_latency = get_latency_profile(V, c, b, cache=None)
-        print('{},{}'.format(tmp_accuracy, tmp_latency))
+        with open(out_fname, 'a') as fout:
+            fout.write('{},{}\n'.format(tmp_accuracy, tmp_latency))
 
 if __name__ == "__main__":
 
-    cache_latency = read_cache_latency()
-    cnt_cache_latency(cache=cache_latency)
+    # cache_latency = read_cache_latency()
+    # cnt_cache_latency(cache=cache_latency)
 
     # cache_accuracy = read_cache_accuracy()
     # cnt_cache_accuracy(cache=cache_accuracy)

@@ -46,7 +46,7 @@ def plot_prediction_delay():
     plt.ylabel('Accuracy', fontsize=14)
     # plt.title('Accuracy Decreases due to Prediction Delay', fontsize=14)
     plt.tight_layout()
-    plt.savefig('img/prediction_delay.png')
+    plt.savefig('img/prediction_delay.pdf')
 
 def plot_longer_history():
 
@@ -85,11 +85,11 @@ def plot_longer_history():
     plt.plot(agg_history_30secs, agg_history_accs, 'o-', c='grey')
     plt.xticks(agg_history_30secs, agg_history_mins)
     agg_history_mins[0] = ''
-    plt.xlabel('History Observed in Hours', fontsize=14)
+    plt.xlabel('History Observed in Minutes', fontsize=14)
     plt.ylabel('Accuracy', fontsize=14)
     # plt.title('Accuracy Increases as Longer History Observed', fontsize=14)
     plt.tight_layout()
-    plt.savefig('img/longer_history.png')
+    plt.savefig('img/longer_history.pdf')
 
 def plot_longer_history_latency():
     all_res = []
@@ -104,25 +104,26 @@ def plot_longer_history_latency():
     all_res = np.array(all_res)
 
     plt.figure(figsize=(4,3))
+    x = [0.5,1,5,10,20,30]
 
     for i in range(4):
-        plt.plot(all_res[i], marker=markers[i], c=colors[i], linewidth=2)
+        plt.plot(x, all_res[i], marker=markers[i], c=colors[i], linewidth=2)
 
     plt.legend(['timeit', 'tq', 'ts', 'tq+ts'])
-    plt.xlabel('History Observed in Hours', fontsize=14)
+    plt.xlabel('History Observed in Minutes', fontsize=14)
     plt.ylabel('Latency (seconds)', fontsize=14)
     plt.tight_layout()
-    plt.savefig('img/longer_history_latency.png')
+    plt.savefig('img/longer_history_latency.pdf')
 
 if __name__ == "__main__":
 
     methods = ['RD', 'GA', 'GL', 'BO', 'Ours']
     colors = ['#233D4D', 'tab:gray', '#48A9A6', '#2F6690', '#F9592C']
-    markers = ['v', 'd', 's', 'o']
+    markers = ['v', '^', 'd', 's', 'o']
     # colors = ['#247BA0', '#70C1B3', '#B2DBBF', '#F3FFBD', '#FF1654']
 
-    # plot_prediction_delay()
+    plot_prediction_delay()
 
-    # plot_longer_history()
+    plot_longer_history()
 
-    # plot_longer_history_latency()
+    plot_longer_history_latency()

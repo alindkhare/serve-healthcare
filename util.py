@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from datetime import datetime
 from collections import Counter
+import copy
 
 from resnet1d.resnet1d import ResNet1D
 import ensemble_profiler as profiler
@@ -51,9 +52,9 @@ def get_description(n_gpu, n_patients, is_small=False):
     # idx,model_idx,modality,n_filters,n_blocks,macs,max_memory_size,params(M),accuracy,latency
     # (0) n_filters, (1) n_blocks: build model
     # (2) model_idx: model architecture index
-    # (3) macs: estimate model size
+    # (3) max_memory_size: estimate model size
     # (4) accuracy, (5) latency
-    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx', 'macs', 'accuracy', 'latency']].values
+    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx', 'max_memory_size', 'accuracy', 'latency']].values
     c = np.array([n_gpu, n_patients])
     print(V)
 
@@ -66,7 +67,7 @@ def b2cnt(b, V):
     cnt: count list. length 20, used for store cache. above case: [0,2,2]+[0]*17. 
     """
     cnt = [0 for _ in range(20)]
-    m = V[:,2]
+    m = np.array(V[:,2], dtype=int)
     tmp_m = np.array(m)[np.array(b, dtype=bool)]
     cnter = Counter(tmp_m)
     for k, v in cnter.items():
@@ -133,26 +134,31 @@ def get_accuracy_profile(V, b, cache, return_all=False):
     choa
     """
     # print('profiling accuracy: ', b)
-    
-    if np.sum(b) == 0:
+    local_b = copy.deepcopy(b)
+    if len(local_b) != 60:
+        local_b = local_b + [0]*(60-len(local_b))
+    # print('profiling accuracy: ', len(local_b), local_b, b)
+
+
+    if np.sum(local_b) == 0:
         final_accuracy = [0,0,0,0,0,0,0,0,0,0,0,0]
     else:
         if cache is not None:
             for i in cache:
-                if dist(b, i[0]) == 0:
-                    # print('using accuracy cache for {}!'.format(b))
+                if dist(local_b, i[0]) == 0:
+                    print('using accuracy cache for {}!'.format(local_b))
                     if return_all:
                         return i[1]
                     else:
                         return i[1][0]
-            print('no accuracy cache found for {}!'.format(b))
+            print('no accuracy cache found for {}!'.format(local_b))
 
-        final_accuracy = evaluate_ensemble_models_per_patient(b)
+        final_accuracy = evaluate_ensemble_models_per_patient(local_b)
 
         if cache is not None:
-            cache.append([list(b), final_accuracy])
-        with open('cache_accuracy.txt', 'a') as fout:
-            fout.write('{}|{}|{}\n'.format(get_now(), list(b), final_accuracy))
+            cache.append([list(local_b), final_accuracy])
+        # with open('cache_accuracy.txt', 'a') as fout:
+        #     fout.write('{}|{}|{}\n'.format(get_now(), list(local_b), final_accuracy))
 
     if return_all:
         return final_accuracy
@@ -175,7 +181,7 @@ def get_latency_profile(V, c, b, cache, debug=False):
         if cache is not None:
             for i in cache:
                 if dist(cnt, i[0]) == 0:
-                    # print('using latencyy cache for {}!'.format(b))
+                    print('using latencyy cache for {}!'.format(b))
                     return i[1]
             print('no latency cache found for {}!'.format(b))
 
@@ -187,7 +193,7 @@ def get_latency_profile(V, c, b, cache, debug=False):
             total_size += i_model[3]
             model_list.append(get_model(base_filters, n_block))
 
-        if total_size/1024/1024/1024 > 30:
+        if total_size/1024 > 30:
             final_latency = 1e6 # set too large 1e6
         else:
             filename = "profile_results.jsonl"
@@ -200,9 +206,10 @@ def get_latency_profile(V, c, b, cache, debug=False):
             try:
                 final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
             except Exception as e:
-                print(e)
+                print('Got error: ', e)
                 final_latency = 1e6 # set exception 1e6
             if final_latency is None:
+                print('Got None')
                 final_latency = 1e6 # set None 1e6
 
         if cache is not None:
@@ -263,10 +270,11 @@ if __name__ == "__main__":
     
 
     # test get_accuracy_profile
-    # V, c = get_description(1,1, is_small=True)
-    # get_accuracy_profile
-
-
     b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
-    a = evaluate_ensemble_models_per_patient(b)
-    print(a)
+    V, c = get_description(1,1, is_small=True)
+    get_accuracy_profile(V, b, cache=None)
+
+
+    # b = [0,1,1,0] + [0,1,1,0] + [0,1,1,0]
+    # a = evaluate_ensemble_models_per_patient(b)
+    # print(a)

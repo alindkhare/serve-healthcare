@@ -432,7 +432,7 @@ def solve_proxy(V, c, L, lamda):
 
 if __name__ == "__main__":
 
-    global_debug = False
+    global_debug = True
     is_small = False
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
-    L = 1 # maximum latency
+    L = 0.2 # maximum latency
     lamda = 1
     
     with open(log_name, 'w') as fout:
