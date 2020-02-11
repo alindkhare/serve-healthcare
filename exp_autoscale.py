@@ -208,7 +208,7 @@ def solve_greedy_accuracy(V, c, L, lamda):
     print("start solve_greedy_accuracy")
     n_model = V.shape[0]
     b = np.zeros(n_model)
-    idx_order = np.argsort(V[:, 2])[::-1] # the 3rd col is accuracy
+    idx_order = np.argsort(V[:, 4])[::-1] # the 5th col is accuracy
     latency = 0.0
     for i in range(n_model):
         tmp_idx = idx_order[i]
@@ -234,7 +234,7 @@ def solve_greedy_latency(V, c, L, lamda):
     print("start solve_greedy_latency")
     n_model = V.shape[0]
     b = np.zeros(n_model)
-    idx_order = np.argsort(V[:, -1]) # the 4th col is latency
+    idx_order = np.argsort(V[:, 5]) # the 6th col is latency
     latency = 0.0
     for i in range(n_model):
         tmp_idx = idx_order[i]

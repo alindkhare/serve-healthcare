@@ -44,12 +44,16 @@ def get_description(n_gpu, n_patients, is_small=False):
     c: n_gpu, n_patients
     """
 
+    df = pd.read_csv('model_list.csv')
     if is_small:
-        df = pd.read_csv('model_list_small.csv')
-    else:
-        df = pd.read_csv('model_list.csv')
+        df = df.iloc[:12,:]
     print('model description:\n', df)
-    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx', 'macs']].values
+    # idx,model_idx,modality,n_filters,n_blocks,macs,max_memory_size,params(M),accuracy,latency
+    # (0) n_filters, (1) n_blocks: build model
+    # (2) model_idx: model architecture index
+    # (3) macs: estimate model size
+    # (4) accuracy, (5) latency
+    V = df.loc[:, ['n_filters', 'n_blocks', 'model_idx', 'macs', 'accuracy', 'latency']].values
     c = np.array([n_gpu, n_patients])
     print(V)
 
@@ -129,15 +133,13 @@ def get_accuracy_profile(V, b, cache, return_all=False):
     choa
     """
     # print('profiling accuracy: ', b)
-
-    cnt = b2cnt(b, V)
     
     if np.sum(b) == 0:
         final_accuracy = [0,0,0,0,0,0,0,0,0,0,0,0]
     else:
         if cache is not None:
             for i in cache:
-                if dist(cnt, i[0]) == 0:
+                if dist(b, i[0]) == 0:
                     # print('using accuracy cache for {}!'.format(b))
                     if return_all:
                         return i[1]
@@ -146,10 +148,11 @@ def get_accuracy_profile(V, b, cache, return_all=False):
             print('no accuracy cache found for {}!'.format(b))
 
         final_accuracy = evaluate_ensemble_models_per_patient(b)
+
         if cache is not None:
-            cache.append([list(cnt), final_accuracy])
+            cache.append([list(b), final_accuracy])
         with open('cache_accuracy.txt', 'a') as fout:
-            fout.write('{}|{}|{}\n'.format(get_now(), list(cnt), final_accuracy))
+            fout.write('{}|{}|{}\n'.format(get_now(), list(b), final_accuracy))
 
     if return_all:
         return final_accuracy
@@ -168,6 +171,7 @@ def get_latency_profile(V, c, b, cache, debug=False):
     if np.sum(b) == 0:
         final_latency = 0.0
     else:
+        # (1) use cache
         if cache is not None:
             for i in cache:
                 if dist(cnt, i[0]) == 0:
@@ -177,24 +181,29 @@ def get_latency_profile(V, c, b, cache, debug=False):
 
         v = V[np.array(b, dtype=bool)]
         model_list = []
+        total_size = 0
         for i_model in v:
             base_filters, n_block = int(i_model[0]), int(i_model[1])
+            total_size += i_model[3]
             model_list.append(get_model(base_filters, n_block))
 
-        filename = "profile_results.jsonl"
-        p = Path(filename)
-        p.touch()
-        os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
-        file_path = Path(filename)
-        system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
-        print(system_constraint)
-        try:
-            final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
-        except Exception as e:
-            print(e)
-            final_latency = 1e6
-        if final_latency is None:
-            final_latency = 1e6
+        if total_size/1024/1024/1024 > 30:
+            final_latency = 1e6 # set too large 1e6
+        else:
+            filename = "profile_results.jsonl"
+            p = Path(filename)
+            p.touch()
+            os.environ["SERVE_PROFILE_PATH"] = str(p.resolve())
+            file_path = Path(filename)
+            system_constraint = {"gpu":int(c[0]), "npatient":int(c[1])}
+            print(system_constraint)
+            try:
+                final_latency = profiler.profile_ensemble(model_list, file_path, system_constraint, fire_clients=False, with_data_collector=False)
+            except Exception as e:
+                print(e)
+                final_latency = 1e6 # set exception 1e6
+            if final_latency is None:
+                final_latency = 1e6 # set None 1e6
 
         if cache is not None:
             cache.append([list(cnt), final_latency])
@@ -236,31 +245,6 @@ def test_fit_latency():
     plt.ylabel('Predicted Latency')
     plt.tight_layout()
     plt.savefig('img/cor_latency.png')
-
-def plot_accuracy_latency():
-    """
-    accuracy t0 latency figure
-    """
-    V, c = get_description(n_gpu=1, n_patients=1)
-    cache_latency = read_cache_latency()
-    B = []
-    latency = []
-    accuracy = []
-    step = 0
-    for i in tqdm(cache_latency):
-        step += 1
-        B.append(i[0])
-        latency.append(i[1])
-        accuracy.append(get_accuracy_profile(V, i[0]))
-
-        if step % 100 == 0:
-            plt.figure(figsize=(4,3))
-            plt.scatter(accuracy, latency, c='tab:grey', s=2)
-            plt.xlabel('Accuracy')
-            plt.ylabel('Latency')
-            plt.tight_layout()
-            plt.savefig('img/accuracy_2_latency.png')
-
 
 if __name__ == "__main__":
 
