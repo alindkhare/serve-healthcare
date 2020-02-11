@@ -91,16 +91,7 @@ def plot_longer_history():
     plt.tight_layout()
     plt.savefig('img/longer_history.png')
 
-
-if __name__ == "__main__":
-
-    methods = ['RD', 'GA', 'GL', 'BO', 'Ours']
-    colors = ['#233D4D', 'tab:gray', '#48A9A6', '#2F6690', '#F9592C']
-    markers = ['v', 'd', 's', 'o']
-    # colors = ['#247BA0', '#70C1B3', '#B2DBBF', '#F3FFBD', '#FF1654']
-
-    # plot_prediction_delay()
-
+def plot_longer_history_latency():
     all_res = []
     df = pd.read_csv("img/timeit_data.csv")
     all_res.append(list(df.iloc[0,:].values))
@@ -122,3 +113,16 @@ if __name__ == "__main__":
     plt.ylabel('Latency (seconds)', fontsize=14)
     plt.tight_layout()
     plt.savefig('img/longer_history_latency.png')
+
+if __name__ == "__main__":
+
+    methods = ['RD', 'GA', 'GL', 'BO', 'Ours']
+    colors = ['#233D4D', 'tab:gray', '#48A9A6', '#2F6690', '#F9592C']
+    markers = ['v', 'd', 's', 'o']
+    # colors = ['#247BA0', '#70C1B3', '#B2DBBF', '#F3FFBD', '#FF1654']
+
+    # plot_prediction_delay()
+
+    # plot_longer_history()
+
+    # plot_longer_history_latency()
