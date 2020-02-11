@@ -100,7 +100,7 @@ def profile_ensemble(model_list, file_path,
             print("Firing the clients")
             if with_data_collector:
                 client_path = os.path.join(
-                    package_directory, "patient_client.go")
+                    package_directory, "new_patient_client.go")
                 cmd = ["go", "run", client_path]
             else:
                 ensembler_path = os.path.join(
