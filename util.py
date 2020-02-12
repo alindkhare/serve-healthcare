@@ -122,7 +122,10 @@ def read_cache_latency():
     return cache_latency
 
 def my_eval(gt, pred):
-    return sqrt(mean_squared_error(gt, pred))
+    out = []
+    out.append(mean_absolute_error(gt, pred))
+    out.append(r2_score(gt, pred))
+    return out
 
 def dist(v1, v2):
     return np.sum(np.abs(np.array(v1) - np.array(v2)))

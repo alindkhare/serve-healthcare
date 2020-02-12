@@ -179,6 +179,11 @@ def write_traj(V, c, b, method):
     with open(traj_name, 'a') as fout:
         fout.write('{},{},{},{},{:.4f},{:.4f},{:.8f},{}\n'.format(get_now(), c[0], c[1], method, roc_auc, pr_auc, latency, b_out))
 
+def write_proxy(mae_accuracy, r2_accuracy, mae_latency, r2_latency):
+    with open(proxy_name, 'a') as fout:
+        fout.write('{:.4f},{:.4f},{:.4f},{:.4f}\n'.format(mae_accuracy, r2_accuracy, mae_latency, r2_latency))
+
+
 ##################################################################################################
 # naive
 ##################################################################################################
@@ -404,8 +409,9 @@ def solve_proxy(V, c, L, lamda):
 
         pred_accuracy = accuracy_predictor.predict(B_proxy)
         pred_latency = latency_predictor.predict(B_proxy)
-        print(my_eval(Y_accuracy_proxy, pred_accuracy))
-        print(my_eval(Y_latency_proxy, pred_latency))
+        mae_accuracy, r2_accuracy = my_eval(Y_accuracy_proxy, pred_accuracy)
+        mae_latency, r2_latency = my_eval(Y_latency_proxy, pred_latency)
+        write_proxy(mae_accuracy, r2_accuracy, mae_latency, r2_latency)
 
         # genetic explore
         # random: 1-p, mutation: p*p1
@@ -463,6 +469,7 @@ if __name__ == "__main__":
     cache_accuracy = read_cache_accuracy()
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
+    proxy_name = 'res/proxy_{}.txt'.format(current_time)
 
     L = 0.6 # maximum latency
     lamda = 1
