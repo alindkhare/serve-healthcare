@@ -118,7 +118,7 @@ def profile_ensemble(model_list, file_path,
                 for patient_name in actor_handles.keys():
                     final_cmd = cmd + [patient_name]
                     if not with_data_collector:
-                        final_cmd += [str(waiting_time_ms)]
+                        final_cmd += [str(waiting_time_ms), str(obs_w_30sec)]
                     ls_output = subprocess.Popen(final_cmd)
                     procs.append(ls_output)
                 for p in procs:
