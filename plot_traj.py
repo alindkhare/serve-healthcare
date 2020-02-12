@@ -28,9 +28,9 @@ def read_res(log_fname, traj_fname):
         fin.readline()
         for line in fin:
             content = line.strip().split(',')
-            method = content[2]
-            accuracy = np.array([float(i) for i in content[3:15]])
-            latency = float(content[15])
+            method = content[3]
+            accuracy = np.array([float(i) for i in content[4:6]])
+            latency = float(content[6])
             traj_method.append(method)
             traj_accuracy.append(accuracy)
             traj_latency.append(latency)
@@ -51,14 +51,13 @@ def plot_fig1_intro():
     ax[0].set_axisbelow(True)
     ax[0].bar(methods, log_latency, color=colors)
     ax[0].set_ylabel('Latency (Seconds)')
-    ax[0].set_yticks(np.arange(0, 1, 0.04))
-    ax[0].set_ylim([0.4,0.6])
+    # ax[0].set_yticks(np.arange(0, 1, 0.04))
+    ax[0].set_ylim([0.12,0.2])
     ax[1].grid()
     ax[1].set_axisbelow(True)
     ax[1].bar(methods, log_accuracy[:,2], color=colors)
-    ax[1].set_yticks(np.arange(0, 1, 0.01))
-    ax[1].set_ylim([0.92,0.96])
-    # ax[1].set_ylim([0.955,0.98])
+    # ax[1].set_yticks(np.arange(0, 1, 0.01))
+    ax[1].set_ylim([0.8,0.94])
     ax[1].set_ylabel('ROC-AUC')
     plt.tight_layout()
     plt.savefig('img/intro.pdf')
@@ -73,35 +72,35 @@ def get_traj(x, y, m):
             out_y.append(y[idx])
         return np.array(out_x), np.array(out_y)
     if m in [3]:
-        for i in range(1,len(x)+1,2):
+        for i in range(1,len(x)+1,10):
             idx = np.argmax(y[:i])
             out_x.append(x[idx])
             out_y.append(y[idx])
         return np.array(out_x), np.array(out_y)
-    
-    else:
-        return x, y
+    if m in [4]:
+        return x[:-1], y[:-1]
 
 def plot_fig4_fig5_explore():
-    all_accuracy = []
-    with open('cache_accuracy_small.txt', 'r') as fin:
-        for line in fin:
-            content = line.strip().split('|')
-            accuracy = np.array([float(i.strip()) for i in content[2].replace('(', '').replace(')', '').split(',')])
-            all_accuracy.append(accuracy)
-    all_accuracy = np.array(all_accuracy)
+    # all_accuracy = []
+    # with open('bk/cache_accuracy_small.txt', 'r') as fin:
+    #     for line in fin:
+    #         content = line.strip().split('|')
+    #         accuracy = np.array([float(i.strip()) for i in content[2].replace('(', '').replace(')', '').split(',')])
+    #         all_accuracy.append(accuracy)
+    # all_accuracy = np.array(all_accuracy)
 
-    all_latency = []
-    with open('cache_latency_small.txt', 'r') as fin:
-        for line in fin:
-            content = line.strip().split('|')
-            latency = float(content[2])
-            all_latency.append(latency)
-    all_latency = np.array(all_latency)
+    # all_latency = []
+    # with open('bk/cache_latency_small.txt', 'r') as fin:
+    #     for line in fin:
+    #         content = line.strip().split('|')
+    #         latency = float(content[2])
+    #         all_latency.append(latency)
+    # all_latency = np.array(all_latency)
 
     plt.figure(figsize=(4,3))
-    plt.scatter(all_latency, all_accuracy[:,0], c='lightgrey')
-    plt.yticks(np.arange(0, 1, 0.05))
+    # plt.scatter(all_latency, all_accuracy[:,0], c='lightgrey')
+    # plt.yticks(np.arange(0, 1, 0.05))
+    plt.xlim([0,0.2])
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
@@ -114,7 +113,7 @@ def plot_fig4_fig5_explore():
     plt.savefig('img/explore.pdf')
 
     plt.figure(figsize=(4,3))
-    plt.yticks(np.arange(0, 1, 0.2))
+    # plt.yticks(np.arange(0, 1, 0.2))
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
@@ -126,7 +125,7 @@ def plot_fig4_fig5_explore():
     plt.savefig('img/explore_latency.pdf')
 
     plt.figure(figsize=(4,3))
-    plt.yticks(np.arange(0, 1, 0.05))
+    # plt.yticks(np.arange(0, 1, 0.05))
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
@@ -144,8 +143,8 @@ if __name__ == "__main__":
     # colors = ['#247BA0', '#70C1B3', '#B2DBBF', '#F3FFBD', '#FF1654']
     markers = ['v', '^', 'd', 's', 'o']
 
-    log_fname = 'res/log_20200210_172950.txt'
-    traj_fname = 'res/traj_20200210_172950.txt'
+    log_fname = 'res/finished/log_20200211_232156_60models_latency0.2.txt'
+    traj_fname = 'res/finished/traj_20200211_232156_60models_latency0.2.txt'
     log_accuracy, log_latency, traj_accuracy, traj_latency = read_res(log_fname, traj_fname)
 
     plot_fig1_intro()
