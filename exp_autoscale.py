@@ -10,9 +10,10 @@ from tqdm import tqdm
 from datetime import datetime
 import copy
 
-from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, read_cache_accuracy, get_description
+from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, read_cache_accuracy, get_description, get_now
 from choa_evaluate_results_simplify import evaluate_ensemble_models, evaluate_ensemble_models_with_history_per_patient
 
+np.random.seed(0)
 
 ##################################################################################################
 # tools
@@ -159,11 +160,12 @@ def write_res(V, c, b, method):
     profile and write a line
     """
     roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models(b=b)
-    roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs=roc_outputs, pr_outputs=pr_outputs, opt_cutoff=True, debug=False)
+    _, roc_auc_std, _, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs=roc_outputs, pr_outputs=pr_outputs, opt_cutoff=True, debug=False)
     latency = get_latency_profile(V, c, b, cache=cache_latency)
 
+    b_out = [int(i) for i in b]
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b_out))
 
 def write_traj(V, c, b, method):
     """
@@ -173,8 +175,9 @@ def write_traj(V, c, b, method):
     roc_auc, pr_auc = get_accuracy_profile(V, b, cache=cache_accuracy, return_all=True)
     latency = get_latency_profile(V, c, b, cache=cache_latency)
 
+    b_out = [int(i) for i in b]
     with open(traj_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc, pr_auc, latency, b))
+        fout.write('{},{},{},{},{:.4f},{:.4f},{:.8f},{}\n'.format(get_now(), c[0], c[1], method, roc_auc, pr_auc, latency, b_out))
 
 ##################################################################################################
 # naive
@@ -194,7 +197,7 @@ def solve_random(V, c, L, lamda):
         idx_all.remove(tmp_idx)
         b[tmp_idx] = 1
         latency = get_latency_profile(V, c, b, cache=cache_latency)
-        print('model id: ', tmp_idx, 'b: ', b, latency)
+        # print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
             break
@@ -219,7 +222,7 @@ def solve_greedy_accuracy(V, c, L, lamda):
         tmp_idx = idx_order[i]
         b[tmp_idx] = 1
         latency = get_latency_profile(V, c, b, cache=cache_latency)
-        print('model id: ', tmp_idx, 'b: ', b, latency)
+        # print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
             break
@@ -246,7 +249,7 @@ def solve_greedy_latency(V, c, L, lamda):
         tmp_idx = idx_order[i]
         b[tmp_idx] = 1
         latency = get_latency_profile(V, c, b, cache=cache_latency)
-        print('model id: ', tmp_idx, 'b: ', b, latency)
+        # print('model id: ', tmp_idx, 'b: ', b, latency)
         if latency >= L:
             b[tmp_idx] = 0
             break
@@ -448,8 +451,7 @@ def solve_proxy(V, c, L, lamda):
     return opt_b
 
 if __name__ == "__main__":
-
-    np.random.seed(0)
+    
     global max_n_model
 
     global_debug = False
@@ -461,7 +463,7 @@ if __name__ == "__main__":
     log_name = 'res/log_{}.txt'.format(current_time)
     traj_name = 'res/traj_{}.txt'.format(current_time)
 
-    L = 0.2 # maximum latency
+    L = 0.6 # maximum latency
     lamda = 1
     
     with open(log_name, 'w') as fout:
