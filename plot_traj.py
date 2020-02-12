@@ -113,6 +113,8 @@ def plot_fig4_fig5_explore():
     plt.savefig('img/explore.pdf')
 
     plt.figure(figsize=(4,3))
+    plt.ylim([0.05,0.22])
+    # plt.hline(0.2)
     # plt.yticks(np.arange(0, 1, 0.2))
     plt.grid()
     for i in range(5):
@@ -122,10 +124,11 @@ def plot_fig4_fig5_explore():
     plt.xlabel('Number of Explore')
     plt.ylabel('Latency (seconds)')
     plt.tight_layout()
-    plt.savefig('img/explore_latency.pdf')
+    plt.savefig('img/explore_latency.png')
 
     plt.figure(figsize=(4,3))
     # plt.yticks(np.arange(0, 1, 0.05))
+    plt.ylim([0.8,0.97])
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
@@ -138,7 +141,7 @@ def plot_fig4_fig5_explore():
 
 if __name__ == "__main__":
 
-    methods = ['RD', 'GA', 'GL', 'BO', 'HOLMES']
+    methods = ['RD', 'AF', 'LF', 'NPO', 'HOLMES']
     colors = ['#233D4D', 'tab:gray', '#48A9A6', '#2F6690', '#F9592C']
     # colors = ['#247BA0', '#70C1B3', '#B2DBBF', '#F3FFBD', '#FF1654']
     markers = ['v', '^', 'd', 's', 'o']
