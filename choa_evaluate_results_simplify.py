@@ -162,6 +162,7 @@ def evaluate_ensemble_models_with_history_per_patient(b, obs_w_30sec =1, roc_out
         acc_opt_cutoff = roc_thresholds[opt_idx]
 
         precision, recall, pr_thresholds = pr_outputs[0],pr_outputs[1],pr_outputs[2]
+        recall += 0.001
         opt_idx = np.argmax((precision * recall)/(precision + recall))
         f1_opt_cutoff = pr_thresholds[opt_idx]
     else:
@@ -241,16 +242,23 @@ def evaluate_ensemble_models_with_history_per_patient(b, obs_w_30sec =1, roc_out
 
 if __name__ == "__main__":
 
-    roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models(b=[1,1],debug=True)
-    print(roc_auc, pr_auc)
+    # AF
+    b = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    # LF
+    # b = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+    # ours
+    # b = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models(b=b,debug=False)
+    print(evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs=roc_outputs, pr_outputs=pr_outputs, opt_cutoff=True, debug=False))
+    # print(roc_auc, pr_auc)
 
-    roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models_with_history(b=[1,1], obs_w_30sec = 10,debug=True)
-    print(roc_auc, pr_auc)
+    # #roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models_with_history(b=[1,1], obs_w_30sec = 10,debug=True)
+    # #print(roc_auc, pr_auc)
 
-    roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std= evaluate_ensemble_models_with_history_per_patient(b=[1,1], obs_w_30sec=10, roc_outputs = roc_outputs, pr_outputs = pr_outputs, opt_cutoff = True, debug=True)
-    print('Cutoff optimized')
-    print(roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std)
+    # roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std= evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs = roc_outputs, pr_outputs = pr_outputs, opt_cutoff = True, debug=True)
+    # print('Cutoff optimized')
+    # print(roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std)
 
-    roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std= evaluate_ensemble_models_with_history_per_patient(b=[1,1], obs_w_30sec=10, roc_outputs = roc_outputs, pr_outputs = pr_outputs, opt_cutoff = False, debug=True)
-    print('Cutoff not optimized')
-    print(roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std)
+    # roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std= evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs = roc_outputs, pr_outputs = pr_outputs, opt_cutoff = False, debug=True)
+    # print('Cutoff not optimized')
+    # print(roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std)
