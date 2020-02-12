@@ -16,8 +16,7 @@ import copy
 
 from resnet1d.resnet1d import ResNet1D
 import ensemble_profiler as profiler
-# from evaluate_results import evaluate_ensemble_models, evaluate_ensemble_models_per_patient
-from choa_evaluate_results import evaluate_ensemble_models_per_patient, evaluate_ensemble_models_with_history_per_patient
+from choa_evaluate_results_simplify import evaluate_ensemble_models, evaluate_ensemble_models_with_history_per_patient
 
 
 def get_now():
@@ -108,7 +107,7 @@ def read_cache_accuracy():
         for line in fin:
             content = line.strip().split('|')
             cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
-            accuracy = np.array([float(i.strip()) for i in content[2].replace('(', '').replace(')', '').split(',')])
+            accuracy = np.array([float(i.strip()) for i in content[2].replace('[', '').replace(']', '').split(',')])
             cache_accuracy.append([cnt, accuracy])
     return cache_accuracy
 
@@ -139,9 +138,8 @@ def get_accuracy_profile(V, b, cache, return_all=False):
         local_b = local_b + [0]*(60-len(local_b))
     # print('profiling accuracy: ', len(local_b), local_b, b)
 
-
     if np.sum(local_b) == 0:
-        final_accuracy = [0,0,0,0,0,0,0,0,0,0,0,0]
+        final_accuracy = [0,0]
     else:
         if cache is not None:
             for i in cache:
@@ -153,12 +151,13 @@ def get_accuracy_profile(V, b, cache, return_all=False):
                         return i[1][0]
             print('no accuracy cache found for {}!'.format(local_b))
 
-        final_accuracy = evaluate_ensemble_models_per_patient(local_b)
+        roc_auc, pr_auc, _, _ = evaluate_ensemble_models(local_b)
+        final_accuracy = [roc_auc, pr_auc]
 
         if cache is not None:
             cache.append([list(local_b), final_accuracy])
-        # with open('cache_accuracy.txt', 'a') as fout:
-        #     fout.write('{}|{}|{}\n'.format(get_now(), list(local_b), final_accuracy))
+        with open('cache_accuracy.txt', 'a') as fout:
+            fout.write('{}|{}|{}\n'.format(get_now(), list(local_b), final_accuracy))
 
     if return_all:
         return final_accuracy
@@ -192,9 +191,11 @@ def get_latency_profile(V, c, b, cache, debug=False):
             base_filters, n_block = int(i_model[0]), int(i_model[1])
             total_size += i_model[3]
             model_list.append(get_model(base_filters, n_block))
+        model_size = total_size/1024
+        print('The model size is: {:.4f} GB'.format(model_size))
 
-        if total_size/1024 > 25:
-            print('The model is too big: {} GB'.format(total_size/1024))
+        if model_size > 25:
+            print('The model is too big')
             final_latency = 1e6 # set too large 1e6
         else:
             filename = "profile_results.jsonl"
@@ -216,8 +217,9 @@ def get_latency_profile(V, c, b, cache, debug=False):
         if cache is not None:
             cache.append([list(cnt), final_latency])
 
-        with open('cache_latency.txt', 'a') as fout:
-            fout.write('{}|{}|{}\n'.format(get_now(), list(cnt), final_latency))
+        if final_latency < 1e2:
+            with open('cache_latency.txt', 'a') as fout:
+                fout.write('{}|{}|{}\n'.format(get_now(), list(cnt), final_latency))
 
     return final_latency
 
@@ -275,6 +277,6 @@ if __name__ == "__main__":
     b = [0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]
 
     V, c = get_description(1,1, is_small=False)
-    # get_accuracy_profile(V, b, cache=None)
-    get_latency_profile(V, c, b, cache=None)
+    print(get_accuracy_profile(V, b, cache=None))
+    # print(get_latency_profile(V, c, b, cache=None))
 

@@ -6,6 +6,7 @@ import random
 from tqdm import tqdm
 
 from util import my_eval, get_accuracy_profile, get_latency_profile, get_description, get_now, b2cnt, cnt2b, read_cache_latency
+from choa_evaluate_results_simplify import evaluate_ensemble_models, evaluate_ensemble_models_with_history_per_patient
 
 def cnt_cache_latency(cache):
 
@@ -34,17 +35,23 @@ def b_cache_accuracy(cache):
                     final_res = get_accuracy_profile(V, b, cache=cache, return_all=True)
 
 def precompute():
-
+    """
+    this code is for testing accuracy profile
+    """
     out_fname = 'precompute_accuracy.txt'
     V, c = get_description(n_gpu=1, n_patients=1, is_small=False)
     n_model = V.shape[0]
     for i in range(n_model):
         b = np.zeros(n_model)
         b[i] = 1
+        roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models(b=b)
+        ret = evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs=roc_outputs, pr_outputs=pr_outputs, opt_cutoff=True, debug=False)
         tmp_accuracy = get_accuracy_profile(V, b, cache=None, return_all=True)
         # tmp_latency = get_latency_profile(V, c, b, cache=None)
-        with open(out_fname, 'a') as fout:
-            fout.write('{}\n'.format(tmp_accuracy))
+        print(tmp_accuracy)
+        print(ret)
+        # with open(out_fname, 'a') as fout:
+        #     fout.write('{}\n'.format(tmp_accuracy))
 
 if __name__ == "__main__":
 

@@ -11,6 +11,8 @@ from datetime import datetime
 import copy
 
 from util import my_eval, get_accuracy_profile, get_latency_profile, read_cache_latency, read_cache_accuracy, get_description
+from choa_evaluate_results_simplify import evaluate_ensemble_models, evaluate_ensemble_models_with_history_per_patient
+
 
 ##################################################################################################
 # tools
@@ -60,11 +62,16 @@ def explore_random(n_model, B, n_samples):
     Output:
         B \in \{0,1\}^{n_samples \times n_model}
     """
+    global max_n_model
+    print('use max_n_model={}'.format(max_n_model))
     out = []
     i = 0
     while i < n_samples:
         flag = True
-        tmp = np.random.choice([0, 1], size=n_model)
+        # get a random probability of 1s and 0s
+        pp = (max_n_model/n_model)*np.random.rand()
+        # get random binary vector
+        tmp = np.random.choice([0, 1], size=n_model, p=(1-pp,pp))
         # dedup
         for b in out:
             if np.array_equal(tmp, b):
@@ -151,22 +158,23 @@ def write_res(V, c, b, method):
     """
     profile and write a line
     """
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std = get_accuracy_profile(V, b, cache=cache_accuracy, return_all=True)
+    roc_auc, pr_auc, roc_outputs, pr_outputs = evaluate_ensemble_models(b=b)
+    roc_auc, roc_auc_std, pr_auc, pr_auc_std, accuracy, accuracy_std, f1,f1_std,precision,precision_std,recall,recall_std = evaluate_ensemble_models_with_history_per_patient(b=b, obs_w_30sec=1, roc_outputs=roc_outputs, pr_outputs=pr_outputs, opt_cutoff=True, debug=False)
     latency = get_latency_profile(V, c, b, cache=cache_latency)
 
     with open(log_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1,f1_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
 
 def write_traj(V, c, b, method):
     """
     more detailed results than write_res
     """
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std = get_accuracy_profile(V, b, cache=cache_accuracy, return_all=True)
+    roc_auc, pr_auc = get_accuracy_profile(V, b, cache=cache_accuracy, return_all=True)
     latency = get_latency_profile(V, c, b, cache=cache_latency)
 
     with open(traj_name, 'a') as fout:
-        fout.write('{},{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc,roc_auc_std,pr_auc,pr_auc_std,f1_score,f1_score_std,precision,precision_std,recall,recall_std,accuracy,accuracy_std, latency, b))
+        fout.write('{},{},{},{:.4f},{:.4f},{:.8f},{}\n'.format(c[0], c[1], method, roc_auc, pr_auc, latency, b))
 
 ##################################################################################################
 # naive
@@ -227,6 +235,7 @@ def solve_greedy_latency(V, c, L, lamda):
     """
     greedy latency incremental
     """
+    global max_n_model
     print("="*60)
     print("start solve_greedy_latency")
     n_model = V.shape[0]
@@ -243,6 +252,7 @@ def solve_greedy_latency(V, c, L, lamda):
             break
         write_traj(V, c, b, 'solve_greedy_latency')
     print('found best b is: {}'.format(b))
+    max_n_model = int(np.sum(b))
 
     opt_b = b
     write_res(V, c, opt_b, 'solve_greedy_latency')
@@ -440,6 +450,7 @@ def solve_proxy(V, c, L, lamda):
 if __name__ == "__main__":
 
     np.random.seed(0)
+    global max_n_model
 
     global_debug = False
     is_small = False
