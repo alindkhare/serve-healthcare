@@ -430,6 +430,7 @@ def solve_proxy(V, c, L, lamda):
             tmp_latency = get_latency_profile(V, c, b, cache=cache_latency)
             Y_latency.append(tmp_latency)
             # print('latency: ', Y_latency[-1])
+            write_traj(V, c, b, 'solve_proxy')
 
         B = B + B_0
         # print('len(B) after epoch: ', len(B))
