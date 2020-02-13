@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     colors = ['#233D4D', 'tab:gray', '#48A9A6', '#2F6690', '#F9592C']
     markers = ['v', '^', 'd', 's', 'o']
-    methods = ['Accuracy Surrogate', 'Lagency Surrogate']
+    methods = ['Accuracy Surrogate', 'Latency Surrogate']
 
     data = pd.read_csv('res/finished/proxy_20200212_231319_60models_latency0.25.txt').values
     print(data)

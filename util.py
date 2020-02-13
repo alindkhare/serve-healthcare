@@ -106,9 +106,9 @@ def read_cache_accuracy():
     with open('cache_accuracy.txt', 'r') as fin:
         for line in fin:
             content = line.strip().split('|')
-            cnt = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
+            b = np.array([int(float(i)) for i in content[1].replace('[', '').replace(']', '').split(',')])
             accuracy = np.array([float(i.strip()) for i in content[2].replace('[', '').replace(']', '').split(',')])
-            cache_accuracy.append([cnt, accuracy])
+            cache_accuracy.append([b, accuracy])
     return cache_accuracy
 
 def read_cache_latency():

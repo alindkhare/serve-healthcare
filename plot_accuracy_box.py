@@ -45,7 +45,7 @@ if __name__ == "__main__":
     accuracy_ours = accuracy_ours[accuracy_ours != 0]
     plt.boxplot([accuracy_npo, accuracy_ours], widths=0.75)
     plt.ylabel('ROC-AUC')
-    plt.xlabel('Latency = 0.15')
+    plt.xlabel(r'Latency $\leq$ 0.15')
     plt.xticks([1,2], ('NPO', 'HOLMES'))
     plt.tight_layout()
     fig.savefig('img/accuracy_box_1.pdf')
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     accuracy_ours = accuracy_ours[accuracy_ours != 0]
     plt.boxplot([accuracy_npo, accuracy_ours], widths=0.75)
     plt.ylabel('ROC-AUC')
-    plt.xlabel('Latency = 0.20')
+    plt.xlabel(r'Latency $\leq$ 0.20')
     plt.xticks([1,2], ('NPO', 'HOLMES'))
     plt.tight_layout()
     fig.savefig('img/accuracy_box_2.pdf')
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     accuracy_ours = accuracy_ours[accuracy_ours != 0]
     plt.boxplot([accuracy_npo, accuracy_ours], widths=0.75)
     plt.ylabel('ROC-AUC')
-    plt.xlabel('Latency = 0.25')
+    plt.xlabel(r'Latency $\leq$ 0.25')
     plt.xticks([1,2], ('NPO', 'HOLMES'))
     plt.tight_layout()
     fig.savefig('img/accuracy_box_3.pdf')
