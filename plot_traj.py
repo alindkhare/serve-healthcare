@@ -46,6 +46,9 @@ def read_res(log_fname, traj_fname):
     return log_accuracy, log_latency, out_accuracy, out_latency
 
 def plot_fig1_intro():
+    """
+    deprecated
+    """
     fig, ax = plt.subplots(1,2,figsize=(8,3))
     ax[0].grid()
     ax[0].set_axisbelow(True)
@@ -55,12 +58,12 @@ def plot_fig1_intro():
     ax[0].set_ylim([0.12,0.2])
     ax[1].grid()
     ax[1].set_axisbelow(True)
-    ax[1].bar(methods, log_accuracy[:,2], color=colors)
+    ax[1].bar(methods, log_accuracy[:,0], color=colors)
     # ax[1].set_yticks(np.arange(0, 1, 0.01))
-    ax[1].set_ylim([0.8,0.94])
+    ax[1].set_ylim([0.86,0.96])
     ax[1].set_ylabel('ROC-AUC')
     plt.tight_layout()
-    plt.savefig('img/intro.pdf')
+    plt.savefig('img/intro.png')
 
 def get_traj(x, y, m):
     out_x = []
@@ -70,6 +73,15 @@ def get_traj(x, y, m):
             idx = np.argmax(y[:i])
             out_x.append(x[idx])
             out_y.append(y[idx])
+        if m == 0:
+            out_x.append(0.26995220)
+            out_y.append(0.8871)
+        if m == 1:
+            out_x.append(0.31019037)
+            out_y.append(0.9385)
+        if m == 2:
+            out_x.append(0.22935618)
+            out_y.append(0.9019)
         return np.array(out_x), np.array(out_y)
     if m in [3]:
         for i in range(1,len(x)+1,10):
@@ -113,18 +125,19 @@ def plot_fig4_fig5_explore():
     plt.savefig('img/explore.pdf')
 
     plt.figure(figsize=(4,3))
-    plt.ylim([0.05,0.22])
-    # plt.hline(0.2)
-    # plt.yticks(np.arange(0, 1, 0.2))
     plt.grid()
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
         plt.plot(plot_traj_x, marker=markers[i], c=colors[i], linewidth=2)
-    plt.legend(methods)
-    plt.xlabel('Number of Explore')
+    plt.axhline(0.2, c='r', linestyle='--')
+    # plt.text(x=3, y=0.21, s='Latency Constraint', fontsize=14, c='r')
+    plt.legend(methods, ncol=3)
+    plt.xlabel('Number of Explorations')
     plt.ylabel('Latency (seconds)')
+    plt.yticks(np.arange(0, 1, 0.05))
+    plt.ylim([0.05,0.4])
     plt.tight_layout()
-    plt.savefig('img/explore_latency.png')
+    plt.savefig('img/explore_latency.pdf')
 
     plt.figure(figsize=(4,3))
     # plt.yticks(np.arange(0, 1, 0.05))
@@ -133,11 +146,39 @@ def plot_fig4_fig5_explore():
     for i in range(5):
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
         plt.plot(plot_traj_y, marker=markers[i], c=colors[i], linewidth=2)
-    plt.legend(methods)
-    plt.xlabel('Number of Explore')
+    plt.legend(methods, ncol=2)
+    plt.xlabel('Number of Explorations')
     plt.ylabel('ROC-AUC')
     plt.tight_layout()
     plt.savefig('img/explore_accuracy.pdf')
+
+
+def plot_fig1_intro_new():
+    """
+    """
+    # rotation = 20
+    # tags = ['Random', 'Best Accuracy', 'Best Latency', 'HOLMES']
+    tags = ['Best\nAccuracy', 'HOLMES', 'Random', 'Best\nLatency']
+    colors = ['tab:gray', '#F9592C', '#233D4D', '#48A9A6']
+    log_latency = [0.91436863, 0.18869656, 0.36, 0.056254166]
+    log_accuracy = [0.9439, 0.925, 0.8758, 0.862784727]
+    fig, ax = plt.subplots(1,2,figsize=(8,3))
+    ax[1].grid()
+    ax[1].set_axisbelow(True)
+    ax[1].bar(tags, log_latency, color=colors)
+    ax[1].set_ylabel('Latency (Seconds)')
+    # ax[1].set_xticklabels(tags, rotation=rotation)
+    # ax[1].set_yticks(np.arange(0, 1, 0.04))
+    # ax[1].set_ylim([0.12,0.2])
+    ax[0].grid()
+    ax[0].set_axisbelow(True)
+    ax[0].bar(tags, log_accuracy, color=colors)
+    # ax[0].set_yticks(np.arange(0, 1, 0.01))
+    ax[0].set_ylim([0.85,0.96])
+    ax[0].set_ylabel('ROC-AUC')
+    # ax[0].set_xticklabels(tags, rotation=rotation)
+    plt.tight_layout()
+    plt.savefig('img/intro.pdf')
 
 if __name__ == "__main__":
 
@@ -150,6 +191,6 @@ if __name__ == "__main__":
     traj_fname = 'res/finished/traj_20200211_232156_60models_latency0.2.txt'
     log_accuracy, log_latency, traj_accuracy, traj_latency = read_res(log_fname, traj_fname)
 
-    plot_fig1_intro()
+    plot_fig1_intro_new()
 
-    plot_fig4_fig5_explore()
+    # plot_fig4_fig5_explore()

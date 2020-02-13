@@ -9,7 +9,8 @@ def plot_prediction_delay():
     model_ensemble = ['II_128f_4b']
     num_per_day = 24*60*2
 
-    early_prediction_mins = [0,1,5,10,20,30,40,50,60,120,180,240,300,360,420,480,540,600,660,720]
+    early_prediction_mins = list(range(0, 13*60, 60))
+    # early_prediction_mins = list(range(60, 3*60, 60))
     early_prediction_30secs = [m*2 for m in early_prediction_mins]
 
     early_prediction_accs = []
@@ -36,14 +37,17 @@ def plot_prediction_delay():
         early_prediction_accs.append(accuracy_score(y_true, y_pred))
 
     plt.figure(figsize=(5,3))
-    plt.plot(early_prediction_30secs, early_prediction_accs, 'o-', c='grey')
     early_prediction_hrs=[int(m/60) for m in early_prediction_mins]
-    for i in range(1,8):
-        early_prediction_hrs[i] = ''
-    early_prediction_hrs[5] = 0.5
-    plt.xticks(early_prediction_30secs, early_prediction_hrs)
+    early_prediction_hrs_reverse = [-i for i in early_prediction_hrs[::-1]]
+    early_prediction_accs_reverse = [i for i in early_prediction_accs[::-1]]
+    plt.plot(early_prediction_hrs_reverse, early_prediction_accs_reverse, 'o-', c='grey')
+    # print(early_prediction_30secs, early_prediction_accs)
+    # for i in range(len(early_prediction_mins)):
+    #     early_prediction_hrs[i] = ''
+    # early_prediction_hrs[5] = 0.5
+    # plt.xticks(early_prediction_hrs)
     plt.xlabel('Prediction Delay in Hours', fontsize=14)
-    plt.ylabel('Accuracy', fontsize=14)
+    plt.ylabel('ROC-AUC', fontsize=14)
     # plt.title('Accuracy Decreases due to Prediction Delay', fontsize=14)
     plt.tight_layout()
     plt.savefig('img/prediction_delay.pdf')
@@ -124,6 +128,6 @@ if __name__ == "__main__":
 
     plot_prediction_delay()
 
-    plot_longer_history()
+    # plot_longer_history()
 
-    plot_longer_history_latency()
+    # plot_longer_history_latency()

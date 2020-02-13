@@ -183,7 +183,6 @@ def write_proxy(mae_accuracy, r2_accuracy, mae_latency, r2_latency):
     with open(proxy_name, 'a') as fout:
         fout.write('{:.4f},{:.4f},{:.4f},{:.4f}\n'.format(mae_accuracy, r2_accuracy, mae_latency, r2_latency))
 
-
 ##################################################################################################
 # naive
 ##################################################################################################
@@ -459,36 +458,39 @@ def solve_proxy(V, c, L, lamda):
 
 if __name__ == "__main__":
     
-    global max_n_model
+    # L = 10 # maximum latency
 
-    global_debug = False
-    is_small = False
+    for L in [0.15, 0.25, 0.3]:
 
-    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    cache_latency = read_cache_latency()
-    cache_accuracy = read_cache_accuracy()
-    log_name = 'res/log_{}.txt'.format(current_time)
-    traj_name = 'res/traj_{}.txt'.format(current_time)
-    proxy_name = 'res/proxy_{}.txt'.format(current_time)
+        lamda = 1
+        tag = '60models_latency{}'.format(L)
 
-    L = 0.6 # maximum latency
-    lamda = 1
-    
-    with open(log_name, 'w') as fout:
-        fout.write(current_time+'\n')
-    
-    V, c = get_description(n_gpu=1, n_patients=1, is_small=is_small)
-    print('model description:\n', V, '\nsystem description:', c)
+        global max_n_model
+        global_debug = False
+        is_small = False
 
-    # # ---------- naive solutions ----------
-    opt_b_solve_random = solve_random(V, c, L, lamda)
-    opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
-    opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
+        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        cache_latency = read_cache_latency()
+        cache_accuracy = read_cache_accuracy()
+        log_name = 'res/log_{}_{}.txt'.format(current_time, tag)
+        traj_name = 'res/traj_{}_{}.txt'.format(current_time, tag)
+        proxy_name = 'res/proxy_{}_{}.txt'.format(current_time, tag)
 
-    # # ---------- BO solution ----------
-    opt_b_solve_opt_passive = solve_opt_passive(V, c, L, lamda)
+        with open(log_name, 'w') as fout:
+            fout.write(current_time+'\n')
+        
+        V, c = get_description(n_gpu=1, n_patients=1, is_small=is_small)
+        print('model description:\n', V, '\nsystem description:', c)
 
-    # ---------- AutoScale solution ----------
-    opt_b_solve_proxy = solve_proxy(V, c, L, lamda)
+        # # ---------- naive solutions ----------
+        opt_b_solve_random = solve_random(V, c, L, lamda)
+        opt_b_solve_greedy_accuracy = solve_greedy_accuracy(V, c, L, lamda)
+        opt_b_solve_greedy_latency = solve_greedy_latency(V, c, L, lamda)
+
+        # # ---------- BO solution ----------
+        opt_b_solve_opt_passive = solve_opt_passive(V, c, L, lamda)
+
+        # ---------- AutoScale solution ----------
+        opt_b_solve_proxy = solve_proxy(V, c, L, lamda)
 
 
