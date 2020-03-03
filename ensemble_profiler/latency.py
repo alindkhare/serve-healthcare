@@ -112,6 +112,8 @@ def profile_ensemble(model_list, file_path,
                 final_cmd = cmd + [patient_name]
                 if not with_data_collector:
                     final_cmd += [str(waiting_time_ms)]
+                if obs_w_30sec is not None:
+                    final_cmd += [str(obs_w_30sec)]
                 ls_output = subprocess.Popen(final_cmd)
                 procs.append(ls_output)
             for p in procs:
