@@ -74,6 +74,7 @@ class HTTPProxy:
         self.actor_handles = actor_handles
         self.ensemble_pipeline = ensemble_pipeline
         self.profile_file = open(file_name, "w")
+        self.output_file = open(file_name.split('.')[0] + "_pred_output.jsonl", "w")
 
     async def handle_lifespan_message(self, scope, receive, send):
         assert scope["type"] == "lifespan"
@@ -220,6 +221,14 @@ class HTTPProxy:
             }))
         self.profile_file.write("\n")
         self.profile_file.flush()
+
+        self.output_file.write(
+            json.dumps({
+                "output": result,
+                "patient_name": info["patient_name"]
+            }))
+        self.output_file.write("\n")
+        self.output_file.flush()
 
         if isinstance(result, ray.exceptions.RayTaskError):
             await JSONResponse({
