@@ -19,7 +19,7 @@ PATIENT_NAME_PREFIX = "patient"
 #: nursery actor name
 NURSERY_ACTOR = "HEALTH_SRTML_PATIENT_NURSERY"
 
-#: Prediction Interval for
+#: Prediction Interval for 30 sec * 250 Hz
 PREDITICATE_INTERVAL = 7500
 
 #: Profiling Ensemble
