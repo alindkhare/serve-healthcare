@@ -74,7 +74,7 @@ def get_traj(x, y, m):
             idx = np.argmax(y[:i])
             out_x.append(x[idx])
             out_y.append(y[idx])
-        # comment for explore, comment for explore_latency and explore_accuracy
+        # comment for explore and explore_accuracy, comment for explore_latency
         # if m == 0:
         #     out_x.append(0.26995220)
         #     out_y.append(0.8871)
@@ -84,6 +84,7 @@ def get_traj(x, y, m):
         # if m == 2:
         #     out_x.append(0.22935618)
         #     out_y.append(0.9019)
+        
         return np.array(out_x), np.array(out_y)
     if m in [3]:
         for i in range(1,len(x)+1,10):
@@ -149,13 +150,13 @@ def plot_fig4_fig5_explore():
         plt.plot(plot_traj_x, marker=markers[i], c=colors[i], linewidth=2)
     plt.axhline(0.2, c='r', linestyle='--')
     # plt.text(x=3, y=0.21, s='Latency Constraint', fontsize=14, c='r')
-    plt.legend(methods, ncol=3)
-    plt.xlabel('Number of Explorations')
-    plt.ylabel('Latency (seconds)')
+    # plt.legend(methods, ncol=3)
+    plt.xlabel('Number of Iterations', fontsize=14)
+    plt.ylabel('Latency (seconds)', fontsize=14)
     plt.yticks(np.arange(0, 1, 0.05))
-    plt.ylim([0.05,0.4])
+    plt.ylim([0.05,0.32])
     plt.tight_layout()
-    plt.savefig('img/explore_latency.png')
+    plt.savefig('img/explore_latency.pdf')
 
     plt.figure(figsize=(4,3))
     # plt.yticks(np.arange(0, 1, 0.05))
@@ -165,10 +166,10 @@ def plot_fig4_fig5_explore():
         plot_traj_x, plot_traj_y = get_traj(traj_latency[i], traj_accuracy[i][:,0], m=i)
         plt.plot(plot_traj_y, marker=markers[i], c=colors[i], linewidth=2)
     plt.legend(methods, ncol=2)
-    plt.xlabel('Number of Explorations')
-    plt.ylabel('ROC-AUC')
+    plt.xlabel('Number of Iterations', fontsize=14)
+    plt.ylabel('ROC-AUC', fontsize=14)
     plt.tight_layout()
-    plt.savefig('img/explore_accuracy.png')
+    plt.savefig('img/explore_accuracy.pdf')
 
 
 def plot_fig1_intro_new():

@@ -19,8 +19,8 @@ if __name__ == "__main__":
     i = 2
     plt.plot(data[1:,i], marker=markers[i], c=colors[i], linewidth=2)
     plt.legend(methods)
-    plt.xlabel('Number of Explorations')
-    plt.ylabel('MAE')
+    plt.xlabel('Number of Iterations', fontsize=14)
+    plt.ylabel('MAE', fontsize=14)
     plt.tight_layout()
     plt.savefig('img/fit_mae.pdf')
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     i = 3
     plt.plot(data[1:,i], marker=markers[i-1], c=colors[i-1], linewidth=2)
     plt.legend(methods)
-    plt.xlabel('Number of Explorations')
-    plt.ylabel('R2 Score')
+    plt.xlabel('Number of Iterations', fontsize=14)
+    plt.ylabel('R2 Score', fontsize=14)
     plt.tight_layout()
     plt.savefig('img/fit_r2.pdf')
