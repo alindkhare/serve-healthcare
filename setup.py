@@ -9,5 +9,5 @@ setup(
   version='0.0.1',
   packages=find_packages(exclude=['contrib', 'docs', 'tests']),
   python_requires='>=3, <4',
-  install_requires=['ray==0.9.0.dev', 'uvloop','torch','torchvision']
+  install_requires=['ray==2.8.1', 'uvloop','torch','torchvision']
 )
